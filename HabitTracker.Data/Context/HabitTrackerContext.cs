@@ -20,7 +20,7 @@ namespace HabitTracker.Data.Context
 
     public HabitTrackerContext()
     {
-      Database.EnsureDeleted(); // гарантируем, что бд удалена
+      //Database.EnsureDeleted(); // гарантируем, что бд удалена
       Database.EnsureCreated();   // гарантируем, что БД создана
     }
 
