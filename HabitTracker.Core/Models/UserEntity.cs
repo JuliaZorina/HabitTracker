@@ -1,14 +1,17 @@
-﻿namespace HabitTracker.Core
+﻿using HabitTracker.Core.Entities;
+using System;
+
+namespace HabitTracker.Core
 {
   /// <summary>
   /// Сущность пользователя системы.
   /// </summary>
-  public class User
+  public class UserEntity 
   {
     /// <summary>
     /// Уникальный идентификатор пользователя.
     /// </summary>
-    public int Id { get; set; }
+    public Guid Id { get; set; }
     /// <summary>
     /// Имя пользователя.
     /// </summary>
@@ -17,5 +20,9 @@
     /// Уникальный идентификатор чата пользователя.
     /// </summary>
     public long ChatId { get; set; }
+    /// <summary>
+    /// Список привычек пользователя.
+    /// </summary>
+    public List<HabitEntity> Habbits { get; set; } = [];
   }
 }
