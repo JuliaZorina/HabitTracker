@@ -46,7 +46,6 @@ namespace HabitTracker.Data
       //Database.EnsureCreated();   // гарантируем, что БД создана
     }
 
-
     #endregion
   }
 }
