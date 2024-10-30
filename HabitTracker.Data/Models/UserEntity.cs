@@ -21,5 +21,16 @@
     /// Список привычек пользователя.
     /// </summary>
     public List<HabitEntity> Habbits { get; set; } = [];
+
+    #region Конструкторы
+
+    public UserEntity(string name, long chatId)
+    {
+      this.Id = Guid.NewGuid();
+      this.Name = name; 
+      this.ChatId = chatId;
+    }
+
+    #endregion
   }
 }

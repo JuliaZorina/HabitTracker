@@ -1,6 +1,4 @@
-﻿using HabitTracker.Core;
-using HabitTracker.Core.Entities;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace HabitTracker.Data.Repositories
 {
@@ -36,7 +34,6 @@ namespace HabitTracker.Data.Repositories
         .FirstOrDefaultAsync(u => id == u.Id);
     }
 
-
     /// <summary>
     /// Получить пользователя по идентификатору его чата в Telegram.
     /// </summary>
@@ -51,20 +48,11 @@ namespace HabitTracker.Data.Repositories
     /// <summary>
     /// Добавить нового пользователя в базу данных.
     /// </summary>
-    /// <param name="id">Уникальный идентификатор пользоваетля.</param>
-    /// <param name="name">Имя пользователя.</param>
-    /// <param name="chatId">Уникальный идентификатор чата пользователя в Telegram.</param>
+    /// <param name="user">Сущность нового пользователя.</param>
     /// <returns></returns>
-    public async Task Add(Guid id, string name, long chatId)
-    {      
-      var habit = new UserEntity
-      {
-        Id = id,
-        Name = name,
-        ChatId = chatId
-      };
-
-      await _dbContext.AddAsync(habit);
+    public async Task Add(UserEntity user)
+    {   
+      await _dbContext.AddAsync(user);
       await _dbContext.SaveChangesAsync();
     }
 
