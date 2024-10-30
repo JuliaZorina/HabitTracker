@@ -20,26 +20,49 @@ namespace HabitTracker.Core
     /// Получить список привычек с выбранным статусом.
     /// </summary>
     /// <param name="status">Статус задачи.</param>
-    /// <param name="userId">Уникальный идентификатор пользователя.</param>
+    /// <param name="chatId">Уникальный идентификатор чата пользователя.</param>
     /// <returns></returns>
-    public async Task<List<HabitEntity>?> GetByStatus(Guid userId,HabitStatus status)
+    public async Task<List<HabitEntity>?> GetByStatus(long chatId,HabitStatus status)
     {
       var habitsRepository = new HabitsRepository(_dbContext);
-      return await habitsRepository.GetByFilter(userId, string.Empty, null, null, status);
+      var usersRepository = new UsersRepository(_dbContext);
+      UserEntity? foundUser = await usersRepository.GetByChatId(chatId);
+      if (foundUser != null)
+      {
+        return await habitsRepository.GetByFilter(foundUser.Id, string.Empty, null, null, status);
+      }
+      else
+      {
+        throw new Exception("Пользователь с таким chatId не найден в базе данных");
+      }
     }
 
-    public async void Add(Guid userID, string title)
+    /// <summary>
+    /// Добавить новую привычку в базу данных.
+    /// </summary>
+    /// <param name="chatId">Уникальный идентификатор чата пользователя.</param>
+    /// <param name="title">Название привычки.</param>
+    public async void Add(long chatId, string title)
     {
       var habitsRepository = new HabitsRepository(_dbContext);
-      var result = await habitsRepository.GetByFilter(userID, title.ToLower(), null, null, null);
-      if(result==null)
+      var usersRepository = new UsersRepository(_dbContext);
+      UserEntity? foundUser = await usersRepository.GetByChatId(chatId);
+      if (foundUser != null)
       {
-        var habit = new HabitEntity(Guid.NewGuid(), userID, title);
-        await habitsRepository.Add(habit);
+        var result = await habitsRepository.GetByFilter(foundUser.Id, title.ToLower(), null, null, null);
+        if (result == null)
+        {
+          var habit = new HabitEntity(Guid.NewGuid(), foundUser.Id, title);
+          await habitsRepository.Add(habit);
+        }
+        else if (result != null && result.Count > 0)
+        {
+          //предложить продолжить уже существующую привычку
+        }
       }
-      else if(result!=null && result.Count>0)
+      else
       {
-        //предложить продолжить уже существующую привычку
+        throw new Exception("Пользователь с таким chatId не существует в базе данных");
       }
     }
 
