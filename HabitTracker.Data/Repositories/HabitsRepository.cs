@@ -1,5 +1,4 @@
-﻿using HabitTracker.Core.Entities;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace HabitTracker.Data.Repositories
 {
@@ -36,10 +35,10 @@ namespace HabitTracker.Data.Repositories
     }
 
     /// <summary>
-    /// Получить привычки по списку фильтров.
+    /// Получить привычки пользователя по списку фильтров.
     /// </summary>
     /// <returns>Асинхронно возвращает привычки, удовлетворяющие заданным фильтрам.</returns>
-    public async Task<List<HabitEntity>?> GetByFilter(string title, DateOnly? createDate, DateOnly? lastExecutionDate,HabitStatus? status)
+    public async Task<List<HabitEntity>?> GetByFilter(Guid userId,string title, DateOnly? createDate, DateOnly? lastExecutionDate,HabitStatus? status)
     {
       var query = _dbContext.Habits.AsNoTracking();
 
@@ -59,6 +58,7 @@ namespace HabitTracker.Data.Repositories
       {
         query = query.Where(h => h.Status == status);
       }
+      query = query.Where(h => h.UserId == userId);
 
       return await query.ToListAsync();
     }
@@ -66,54 +66,35 @@ namespace HabitTracker.Data.Repositories
     /// <summary>
     /// Добавить новую привычку в базу данных.
     /// </summary>
-    /// <param name="id">Уникальный идентификатор привычки.</param>
-    /// <param name="userId">Уникальный идентификатор пользователя-владельца привычки.</param>
-    /// <param name="name">Название привычки.</param>
-    /// <param name="creationDay">Дата создания привычки.</param>
-    /// <param name="lastDay">Дата последнего выполнения привычки.</param>
-    /// <param name="status">Статус привычки.</param>
-    /// <param name="progressDays">Количество дней прогресса привычки.</param>
+    /// <param name="habit">Экземпляр класса привычки.</param>
     /// <returns></returns>
-    public async Task Add(Guid id, Guid userId, string name, DateOnly creationDay, DateOnly lastDay, HabitStatus status, long progressDays)
+    public async Task Add(HabitEntity habit)
     {
-      var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == id) 
+      var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == habit.UserId) 
         ?? throw new ArgumentNullException("Не найден пользователь с указанным Id.");
 
-      var habit = new HabitEntity
-      {
-        Id = id,
-        UserId = userId,
-        Name = name,
-        Status = status,
-        ProgressDays = progressDays,
-        CreationDate = creationDay,
-        LastExecutionDate = lastDay
-      };
+      var newHabit = new HabitEntity(habit.Id, habit.UserId, habit.Name);
 
-      user.Habbits.Add(habit);
+      user.Habbits.Add(newHabit);
 
-      await _dbContext.AddAsync(habit);
+      await _dbContext.AddAsync(newHabit);
       await _dbContext.SaveChangesAsync();
     }
 
     /// <summary>
     /// Обновить данные о привычке.
     /// </summary>
-    /// <param name="id">Уникальный идентификатор привычки.</param>
-    /// <param name="name">Название привычки.</param>
-    /// <param name="lastDay">Дата последнего выполнения привычки.</param>
-    /// <param name="status">Статус привычки.</param>
-    /// <param name="progressDays">Количество дней прогресса привычки.</param>
+    /// <param name="habit">Экземпляр класса привычки.</param>
     /// <returns></returns>
-    public async Task Update(Guid id, string name, DateOnly lastDay, HabitStatus status, long progressDays)
+    public async Task Update(HabitEntity habit)
     {
       await _dbContext.Habits
-        .Where(h => h.Id == id)
+        .Where(h => h.Id == habit.Id)
         .ExecuteUpdateAsync(s => s
-          .SetProperty(h => h.Name, name)
-          .SetProperty(h => h.LastExecutionDate, lastDay)
-          .SetProperty(h => h.Status, status)
-          .SetProperty(h => h.ProgressDays, progressDays));
+          .SetProperty(h => h.Name, habit.Name)
+          .SetProperty(h => h.LastExecutionDate, habit.LastExecutionDate)
+          .SetProperty(h => h.Status, habit.Status)
+          .SetProperty(h => h.ProgressDays, habit.ProgressDays));
     }
     /// <summary>
     /// Удалить привычку из базы данных.
@@ -121,7 +102,7 @@ namespace HabitTracker.Data.Repositories
     /// <param name="id"></param>
     /// <returns></returns>
     public async Task Delete(Guid id)
-    {
+    { 
       await _dbContext.Habits
         .Where(h => h.Id == id)
         .ExecuteDeleteAsync();

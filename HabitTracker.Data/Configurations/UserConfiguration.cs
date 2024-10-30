@@ -1,5 +1,4 @@
-﻿using HabitTracker.Core;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace HabitTracker.Data.Configurations

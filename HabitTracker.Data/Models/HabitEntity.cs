@@ -1,4 +1,4 @@
-﻿namespace HabitTracker.Core.Entities
+﻿namespace HabitTracker.Data
 {
   /// <summary>
   /// Сущность привычки.
@@ -36,7 +36,31 @@
     /// <summary>
     /// Дата последнего выполнения привычки.
     /// </summary>
-    public DateOnly LastExecutionDate { get; set; }
+    public DateOnly? LastExecutionDate { get; set; }
+
+    #region Конструкторы
+    public HabitEntity() { }
+
+    public HabitEntity(Guid id, string name, DateOnly lastDay, HabitStatus status, long progressDays)
+    {
+      this.Id = id;
+      this.Name = name;
+      this.LastExecutionDate = lastDay;
+      this.Status = status;
+      this.ProgressDays = progressDays;
+    }
+
+    public HabitEntity(Guid id, Guid userId, string name)
+    {
+      this.Id = id;
+      this.UserId = userId;
+      this.Name = name;
+      this.CreationDate = DateOnly.FromDateTime(DateTime.UtcNow);
+      this.LastExecutionDate = null;
+      this.Status = HabitStatus.Undone;
+      this.ProgressDays = 0;
+    }
+    #endregion
   }
   /// <summary>
   /// Статусы привычки.
@@ -44,12 +68,16 @@
   public enum HabitStatus
   {
     /// <summary>
+    /// Привычка выполнена.
+    /// </summary>
+    Done,
+    /// <summary>
     /// Привычка выполняется.
     /// </summary>
-    Active,
+    InProgress,
     /// <summary>
-    /// Привычка удалена.
+    /// Привычка не выполнена
     /// </summary>
-    Deleted
+    Undone
   } 
 }

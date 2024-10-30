@@ -1,7 +1,4 @@
-﻿using HabitTracker.Core.Entities;
-using System;
-
-namespace HabitTracker.Core
+﻿namespace HabitTracker.Data
 {
   /// <summary>
   /// Сущность пользователя системы.
