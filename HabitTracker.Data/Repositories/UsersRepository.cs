@@ -29,9 +29,9 @@ namespace HabitTracker.Data.Repositories
     /// Получить пользователя по его уникальному идентификатору.
     /// </summary>
     /// <returns>Асинхронно возвращает привычку, найденную по ее уникальному идентификатору.</returns>
-    public async Task<HabitEntity?> GetById(Guid id)
+    public async Task<UserEntity?> GetById(Guid id)
     {
-      return await _dbContext.Habits
+      return await _dbContext.Users
         .AsNoTracking()
         .FirstOrDefaultAsync(u => id == u.Id);
     }
