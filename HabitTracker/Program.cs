@@ -1,5 +1,4 @@
-﻿using HabitTracker.Core;
-using HabitTracker.Data;
+﻿using HabitTracker.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;

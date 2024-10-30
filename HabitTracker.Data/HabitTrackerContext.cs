@@ -1,6 +1,4 @@
-﻿using HabitTracker.Core;
-using HabitTracker.Core.Entities;
-using HabitTracker.Data.Configurations;
+﻿using HabitTracker.Data.Configurations;
 using HabitTracker.Data.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
