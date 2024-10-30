@@ -39,7 +39,7 @@ namespace HabitTracker.Data.Repositories
     /// Получить привычки по списку фильтров.
     /// </summary>
     /// <returns>Асинхронно возвращает привычки, удовлетворяющие заданным фильтрам.</returns>
-    public async Task<List<HabitEntity>?> GetByFilter(string title, DateOnly? createDate, DateOnly? lastExecutionDate)
+    public async Task<List<HabitEntity>?> GetByFilter(string title, DateOnly? createDate, DateOnly? lastExecutionDate,HabitStatus? status)
     {
       var query = _dbContext.Habits.AsNoTracking();
 
@@ -54,6 +54,10 @@ namespace HabitTracker.Data.Repositories
       if (lastExecutionDate != null)
       {
         query = query.Where(h =>h.LastExecutionDate == lastExecutionDate);
+      }
+      if(status!= null)
+      {
+        query = query.Where(h => h.Status == status);
       }
 
       return await query.ToListAsync();
@@ -111,7 +115,11 @@ namespace HabitTracker.Data.Repositories
           .SetProperty(h => h.Status, status)
           .SetProperty(h => h.ProgressDays, progressDays));
     }
-    
+    /// <summary>
+    /// Удалить привычку из базы данных.
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     public async Task Delete(Guid id)
     {
       await _dbContext.Habits
