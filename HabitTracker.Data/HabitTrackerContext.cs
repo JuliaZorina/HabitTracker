@@ -8,7 +8,7 @@ namespace HabitTracker.Data
 {
   public class HabitTrackerContext : DbContext
   {
-    private readonly StreamWriter logStream = new StreamWriter("mylog.txt", true);
+    private StreamWriter logStream = new StreamWriter("mylog.txt", true);
 
     public DbSet<UserEntity> Users { get; set; }
     public DbSet<HabitEntity> Habits { get; set; }
@@ -20,7 +20,19 @@ namespace HabitTracker.Data
 
       base.OnModelCreating(modelBuilder);
     }
-    
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+      //TODO : заменить ApplicationData.ConfigApp.DatabaseConnectionString на считывание данных из AppSettings.json
+      optionsBuilder.UseNpgsql(ApplicationData.ConfigApp.DatabaseConnectionString);
+      optionsBuilder.LogTo(logStream.WriteLine, new[] { DbLoggerCategory.Database.Command.Name });
+    }
+    public override async ValueTask DisposeAsync()
+    {
+      await base.DisposeAsync();
+      await logStream.DisposeAsync();
+    }
+
     #region Конструторы
 
     public HabitTrackerContext(DbContextOptions<HabitTrackerContext> options) 

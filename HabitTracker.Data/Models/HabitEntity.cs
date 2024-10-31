@@ -20,7 +20,7 @@
     /// <summary>
     /// Название привычки
     /// </summary>
-    public string Name { get; set; }
+    public string Title { get; set; }
     /// <summary>
     /// Статус привычки.
     /// </summary>
@@ -44,7 +44,7 @@
     public HabitEntity(Guid id, string name, DateOnly lastDay, HabitStatus status, long progressDays)
     {
       this.Id = id;
-      this.Name = name;
+      this.Title = name;
       this.LastExecutionDate = lastDay;
       this.Status = status;
       this.ProgressDays = progressDays;
@@ -54,7 +54,7 @@
     {
       this.Id = id;
       this.UserId = userId;
-      this.Name = name;
+      this.Title = name;
       this.CreationDate = DateOnly.FromDateTime(DateTime.UtcNow);
       this.LastExecutionDate = null;
       this.Status = HabitStatus.Undone;
