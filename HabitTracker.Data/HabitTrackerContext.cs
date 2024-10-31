@@ -21,27 +21,13 @@ namespace HabitTracker.Data
       base.OnModelCreating(modelBuilder);
     }
     
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-      optionsBuilder.UseNpgsql(ApplicationData.ConfigApp.DatabaseConnectionString);
-      //optionsBuilder.LogTo(Console.WriteLine, new[] { RelationalEventId.CommandExecuted });
-      optionsBuilder.LogTo(Console.WriteLine, new[] { DbLoggerCategory.Database.Command.Name });
-      optionsBuilder.LogTo(logStream.WriteLine, Microsoft.Extensions.Logging.LogLevel.Error);
-    }
-
-    public override async ValueTask DisposeAsync()
-    {
-      await base.DisposeAsync();
-      await logStream.DisposeAsync();
-    }
-    
     #region Конструторы
 
     public HabitTrackerContext(DbContextOptions<HabitTrackerContext> options) 
       :base(options)
     {
-      //Database.EnsureDeleted(); // гарантируем, что бд удалена
-      //Database.EnsureCreated();   // гарантируем, что БД создана
+      //Database.EnsureDeleted();
+      //Database.EnsureCreated();
     }
 
     #endregion
