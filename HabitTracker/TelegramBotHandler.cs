@@ -11,7 +11,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 namespace HabitTracker
 {
   /// <summary>
-  /// Класс для обработки сообщений Telegram бота.
+  /// Класс для взаимодействия пользователя с Telegram ботом.
   /// </summary>
   public class TelegramBotHandler
   {
@@ -55,7 +55,7 @@ namespace HabitTracker
     /// <param name="client">Клиент Telegram бота.</param>
     /// <param name="exception">Возникшее исключение.</param>
     /// <param name="token">Токен отмены.</param>
-    /// <returns></returns>
+    /// <returns>Задача, представляющая асинхронную операцию.</returns>
     private Task HandlePollingErrorAsync(ITelegramBotClient client, Exception exception, CancellationToken token)
     {
       var ErrorMessage = exception switch
@@ -75,7 +75,7 @@ namespace HabitTracker
     /// <param name="client">Клиент Telegram бота.</param>
     /// <param name="update">Объект обновления.</param>
     /// <param name="token">Токен отмены.</param>
-    /// <returns></returns>
+    /// <returns>Задача, представляющая асинхронную операцию.</returns>
     private async Task HandleUpdateAsync(ITelegramBotClient client, Update update, CancellationToken token)
     {
       if (update.Type == UpdateType.Message && update.Message?.Text != null)
@@ -93,6 +93,7 @@ namespace HabitTracker
     /// </summary>
     /// <param name="callbackQuery">Данные callback-запроса.</param>
     /// <param name="token">Токен отмены.</param>
+    /// <returns>Задача, представляющая асинхронную операцию.</returns>
     private async Task HandleCallbackQueryAsync(CallbackQuery? callbackQuery, CancellationToken token)
     {
       var chatId = callbackQuery.From.Id;
@@ -116,7 +117,7 @@ namespace HabitTracker
     /// </summary>
     /// <param name="message">Данные входящего сообщения.</param>
     /// <param name="token">Токен онмены.</param>
-    /// <returns></returns>
+    /// <returns>Задача, представляющая асинхронную операцию.</returns>
     private async Task HandleMessageAsync(Message message, CancellationToken token)
     {
       var chatId = message.Chat.Id;

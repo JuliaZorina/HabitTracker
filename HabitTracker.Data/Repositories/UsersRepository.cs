@@ -6,6 +6,9 @@ namespace HabitTracker.Data.Repositories
   {
     #region Поля и свойства
 
+    /// <summary>
+    /// Контекст базы данных
+    /// </summary>
     private readonly HabitTrackerContext _dbContext;
 
     #endregion
@@ -49,7 +52,7 @@ namespace HabitTracker.Data.Repositories
     /// Добавить нового пользователя в базу данных.
     /// </summary>
     /// <param name="user">Сущность нового пользователя.</param>
-    /// <returns></returns>
+    /// <returns>Задача, представляющая асинхронную операцию.</returns>
     public async Task Add(UserEntity user)
     {   
       await _dbContext.AddAsync(user);

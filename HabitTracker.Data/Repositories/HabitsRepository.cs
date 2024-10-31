@@ -6,6 +6,9 @@ namespace HabitTracker.Data.Repositories
   {
     #region Поля и свойства
 
+    /// <summary>
+    /// Контекст базы данных.
+    /// </summary>
     private readonly HabitTrackerContext _dbContext;
 
     #endregion
@@ -67,7 +70,7 @@ namespace HabitTracker.Data.Repositories
     /// Добавить новую привычку в базу данных.
     /// </summary>
     /// <param name="habit">Экземпляр класса привычки.</param>
-    /// <returns></returns>
+    /// <returns>Задача, представляющая асинхронную операцию.</returns>
     public async Task Add(HabitEntity habit)
     {
       var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == habit.UserId) 
@@ -85,7 +88,7 @@ namespace HabitTracker.Data.Repositories
     /// Обновить данные о привычке.
     /// </summary>
     /// <param name="habit">Экземпляр класса привычки.</param>
-    /// <returns></returns>
+    /// <returns>Задача, представляющая асинхронную операцию.</returns>
     public async Task Update(HabitEntity habit)
     {
       await _dbContext.Habits

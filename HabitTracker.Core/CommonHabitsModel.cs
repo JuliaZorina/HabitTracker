@@ -10,6 +10,9 @@ namespace HabitTracker.Core
   {
     #region Поля и свойства
 
+    /// <summary>
+    /// Контекст базы данных.
+    /// </summary>
     private HabitTrackerContext _dbContext;
 
     #endregion

@@ -13,7 +13,7 @@ namespace HabitTracker
     /// <summary>
     /// Метод для создания контекста базы данных.
     /// </summary>
-    /// <param name="args">Аргументы команжной строки.</param>
+    /// <param name="args">Аргументы командной строки.</param>
     /// <returns>Экземпляр контекста базы данных.</returns>
     public HabitTrackerContext CreateDbContext(string[] args)
     {

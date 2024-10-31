@@ -1,6 +1,9 @@
 ﻿
 namespace HabitTracker.Models
 {
+  /// <summary>
+  /// Отслеживание статуса пользователя при добавлении новой привычки.
+  /// </summary>
   public class UserStateTracker
   {
     private static Dictionary<long, string> userStates = new Dictionary<long, string>();
