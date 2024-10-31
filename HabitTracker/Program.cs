@@ -1,9 +1,5 @@
-﻿using HabitTracker.Data;
-using HabitTracker.Data.Data;
+﻿using HabitTracker.Data.Data;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Design;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using System.Diagnostics;
 
 namespace HabitTracker

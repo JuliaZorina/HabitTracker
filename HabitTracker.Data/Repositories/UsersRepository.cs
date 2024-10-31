@@ -42,7 +42,7 @@ namespace HabitTracker.Data.Repositories
     {
       return await _dbContext.Users
         .AsNoTracking()
-        .FirstOrDefaultAsync(u => id == u.ChatId);
+        .FirstOrDefaultAsync(u => u.ChatId== id);
     }
 
     /// <summary>

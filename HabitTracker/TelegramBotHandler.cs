@@ -102,7 +102,7 @@ namespace HabitTracker
 
       if (userData != null)
       {
-        var user = new User(userName, chatId);
+        var user = new User(userName, chatId, _dbContext);
         await user.ProcessCallbackAsync(_botClient, chatId, callbackQuery.Data, callbackQuery.Message.MessageId);
       }
       else
@@ -130,7 +130,7 @@ namespace HabitTracker
         userModel.Add(userName, chatId);
         await _botClient.SendTextMessageAsync(chatId, $"{userName}, добро пожаловать!");
       }
-      var user = new User(userName, chatId);
+      var user = new User(userName, chatId, _dbContext);
       await user.ProcessMessageAsync(_botClient, chatId, messageText);
     }
 

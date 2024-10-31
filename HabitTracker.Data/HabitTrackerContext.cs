@@ -1,8 +1,6 @@
 ﻿using HabitTracker.Data.Configurations;
 using HabitTracker.Data.Data;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
-using Npgsql.EntityFrameworkCore.PostgreSQL;
 
 namespace HabitTracker.Data
 {
