@@ -1,6 +1,7 @@
 ﻿using HabitTracker.Data;
 using HabitTracker.Interfaces;
 using Telegram.Bot;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace HabitTracker
 {
@@ -12,9 +13,33 @@ namespace HabitTracker
       throw new NotImplementedException();
     }
 
-    public Task ProcessMessageAsync(ITelegramBotClient botClient, long chatId, string message)
+    public async Task ProcessMessageAsync(ITelegramBotClient botClient, long chatId, string message)
     {
-      throw new NotImplementedException();
+      if (string.IsNullOrEmpty(message))
+      {
+        return;
+      }
+
+      if (message.ToLower().Contains("/start"))
+      {
+        var keyboard = new InlineKeyboardMarkup(new[]
+         {
+      new[]
+      {
+        InlineKeyboardButton.WithCallbackData("Получить список привычек", "/getAllHabits")
+      },
+      new[]
+      {
+        InlineKeyboardButton.WithCallbackData("Создать новую привычку", "/addNewHabit")
+      },
+      new[]
+      {
+        InlineKeyboardButton.WithCallbackData("Получить статистику по привычкам", "/getStatistics")
+      },
+
+    });
+        await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Выберите действие: ", keyboard);
+      }
     }
 
     #endregion
