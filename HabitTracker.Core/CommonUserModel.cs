@@ -62,7 +62,7 @@ namespace HabitTracker.Core
     #endregion
 
     #region Конструкторы
-    CommonUserModel(HabitTrackerContext dbContext)
+    public CommonUserModel(HabitTrackerContext dbContext)
     {
       _dbContext = dbContext;
     }

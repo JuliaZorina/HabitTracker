@@ -1,28 +1,53 @@
 ﻿using HabitTracker.Data;
+using HabitTracker.Data.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System.Diagnostics;
 
 namespace HabitTracker
 {
-  internal class Program : IDesignTimeDbContextFactory<HabitTrackerContext>
+  /// <summary>
+  /// Главный класс программы, содержащий точку входа.
+  /// </summary>
+  internal class Program
   {
-    public HabitTrackerContext CreateDbContext(string[] args)
+    /// <summary>
+    /// Точка входа в приложение.
+    /// </summary>
+    /// <param name="args"></param>
+    /// <returns></returns>
+    static async Task Main(string[] args)
     {
-      var configuration = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("AppSettings.json", optional: true, reloadOnChange: true)
-            .Build();
+      Console.WriteLine("Отладка: Программа запущена");
 
-      DbContextOptionsBuilder<HabitTrackerContext> optionsBuilder = new DbContextOptionsBuilder<HabitTrackerContext>()
-                .UseNpgsql(configuration.GetConnectionString("Postgre"));
+      try
+      {
+        var config = ApplicationData.ConfigApp;
 
-      return new HabitTrackerContext(optionsBuilder.Options);
-    }
-    static void Main(string[] args)
-    {
-      
+        Console.WriteLine("Конфигурация успешно загружена");
+        Console.WriteLine($"Токен бота: {config.BotToken}");
+        var dbContextFactory = new DbContextFactory();
+        var dbContext = dbContextFactory.CreateDbContext(args);
+
+        await dbContext.Database.MigrateAsync();
+
+        var botHandler = new TelegramBotHandler(config.BotToken, dbContext);
+        await botHandler.StartBotAsync();
+
+        await Task.Delay(-1);
+      }
+      catch (Exception ex)
+      {
+        Console.WriteLine($"Отладка: Произошла ошибка - {ex.Message}");
+        Debug.WriteLine($"Отладка: Подробности исключения - {ex}");
+      }
+
+      Console.WriteLine("Отладка: Программа завершена");
+
+      Console.WriteLine("Нажмите любую клавишу для выхода...");
+      Console.ReadKey();
     }
   }
 }
