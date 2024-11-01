@@ -5,6 +5,7 @@ using HabitTracker.Models;
 using System.Globalization;
 using System.Text;
 using Telegram.Bot;
+using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace HabitTracker
@@ -41,6 +42,11 @@ namespace HabitTracker
 
       if (message.ToLower().Contains("/start"))
       {
+        if (!string.IsNullOrEmpty(UserStateTracker.GetUserState(chatId)))
+        {
+          UserStateTracker.ClearTemporaryData(chatId);
+          UserStateTracker.SetUserState(chatId, null);
+        }
         var keyboard = new InlineKeyboardMarkup(new[]
          {
           new[]
@@ -59,9 +65,27 @@ namespace HabitTracker
     });
         await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Выберите действие: ", keyboard);
       }
-      else if (!string.IsNullOrEmpty(UserStateTracker.GetUserState(chatId)))
+      else if (!string.IsNullOrEmpty(UserStateTracker.GetUserState(chatId))
+        &&(UserStateTracker.GetUserState(chatId) == "awaiting_habit_title"))
       {
         await ProcessCreatingHabitAsync(botClient, chatId, message);
+      }
+      else if (!string.IsNullOrEmpty(UserStateTracker.GetUserState(chatId))
+        &&(UserStateTracker.GetUserState(chatId).Contains("awaiting_habit_rename")))
+      {
+        await ProcessCreatingHabitAsync(botClient, chatId, message);
+      }
+      else
+      {
+        var keyboard = new InlineKeyboardMarkup(new[]
+         {
+          new[]
+          {
+            InlineKeyboardButton.WithCallbackData("На главную", "/start")
+          },
+
+    });
+        await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Введена неизвестная команда ", keyboard);
       }
     }
 
@@ -131,7 +155,7 @@ namespace HabitTracker
           {
             new[]
             {
-              InlineKeyboardButton.WithCallbackData("Редактировать привычку", $"/edit_habit_{habitId}")
+              InlineKeyboardButton.WithCallbackData("Переименовать привычку", $"/edit_habit_{habitId}")
             },
             new[]
             {
@@ -152,17 +176,85 @@ namespace HabitTracker
         else if (callbackData.Contains($"/edit_habit_"))
         {
           var habitId = callbackData.Remove(0, callbackData.LastIndexOf('_') + 1);
-          
+          await EditHabitAsync(botClient, chatId, habitId);
         }
         else if (callbackData.Contains($"/mark_as_done_"))
         {
           var habitId = callbackData.Remove(0, callbackData.LastIndexOf('_') + 1);
+          await EditHabit(botClient, messageId, habitId, HabitStatus.Done, chatId);
         }
         else if (callbackData.Contains($"/delete_habit_"))
         {
           var habitId = callbackData.Remove(0, callbackData.LastIndexOf('_') + 1);
+          await DeleteHabitAsync(botClient, messageId, habitId, chatId);
         }
       }
+    }
+
+    /// <summary>
+    /// Асинхронно удаляет привычку из базы данных.
+    /// </summary>
+    /// <param name="botClient">Клиент Telegram бота.</param>
+    /// <param name="messageId">Уникальный идентификатор сообщения.</param>
+    /// <param name="habitId">Уникальный идентификатор привычки.</param>
+    /// <param name="chatId">Уникальный идентификатор чата.</param>
+    /// <returns>Задача, представляющая асинхронную операцию.</returns>
+    private async Task DeleteHabitAsync(ITelegramBotClient botClient, int messageId, string habitId, long chatId)
+    {
+      var habitsModel = new CommonHabitsModel(_dbContext);
+      var habit = await GetHabitById(chatId, Guid.Parse(habitId));
+      var title = habit.Title;
+      habitsModel.Delete(Guid.Parse(habitId));
+
+      var keyboard = new InlineKeyboardMarkup(new[]
+       {
+          new[]
+          {
+            InlineKeyboardButton.WithCallbackData("На главную", "/start")
+          }
+        });
+      await HabitTracker.TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Данные о привычке {title} обновлены", keyboard, messageId);
+    }
+
+    /// <summary>
+    /// Отредактировать данные о привычке.
+    /// </summary>
+    /// <param name="botClient">Клииент Telegram бота.</param>
+    /// <param name="messageId">Уникальный идетификатор сообщения.</param>
+    /// <param name="habitId">Уникальный идентификатор привычки.</param>
+    /// <param name="status">Статус привычкии.</param>
+    /// <param name="chatId">Уникальный идентификатор чата.</param>
+    /// <returns>Задача, представляющая асинхронную операцию.</returns>
+    private async Task EditHabit(ITelegramBotClient botClient, int messageId, string habitId, HabitStatus status, long chatId)
+    {
+      var habitsModel = new CommonHabitsModel(_dbContext);
+      var habit = await GetHabitById(chatId, Guid.Parse(habitId));
+      var lastDay = DateOnly.FromDateTime(DateTime.UtcNow);
+      var progressDays = habit.ProgressDays + 1;
+      habitsModel.Update(habit.Id, habit.Title,  lastDay, status, progressDays);
+
+      var keyboard = new InlineKeyboardMarkup(new[]
+       {
+          new[]
+          {
+            InlineKeyboardButton.WithCallbackData("На главную", "/start")
+          }
+        });
+      await HabitTracker.TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Данные о привычке {habit.Title} обновлены", keyboard, messageId);
+    }
+    /// <summary>
+    /// Отредактировать данные о привычке.
+    /// </summary>
+    /// <param name="botClient">Клиент Telegram бота.</param>
+    /// <param name="habitId">Уникальный идентификатор привычки.</param>
+    /// <param name="chatId">Уникальный идентификатор чата.</param>
+    /// <param name="newTitle">Новое название привычки.</param>
+    /// <returns>Задача, представляющая асинхронную операцию.</returns>
+    private async Task EditHabit(ITelegramBotClient botClient, string habitId, long chatId, string newTitle)
+    {
+      var habitsModel = new CommonHabitsModel(_dbContext);
+      var habit = await GetHabitById(chatId, Guid.Parse(habitId));
+      habitsModel.Update(habit.Id, newTitle, habit.LastExecutionDate, habit.Status, habit.ProgressDays);
     }
 
     /// <summary>
@@ -170,7 +262,7 @@ namespace HabitTracker
     /// </summary>
     /// <param name="chatId">Уникальный идентификатор чата пользователя.</param>
     /// <param name="habitId">Уникальный идентификатор привычки.</param>
-    /// <returns></returns>
+    /// <returns>Задача, представляющая асинхронную операцию.</returns>
     private async Task<HabitEntity?> GetHabitById(long chatId, Guid habitId)
     {
       var habitModel = new CommonHabitsModel(_dbContext);
@@ -195,7 +287,8 @@ namespace HabitTracker
       foreach(var habit in habits)
       {
         messageBuilder.AppendLine($"Название привычки: {habit.Title}." +
-          $"\nСтатус на {DateOnly.FromDateTime(DateTime.Now)}: {habit.Status}");
+          $"\nСтатус на {DateOnly.FromDateTime(DateTime.Now)}: {habit.Status}" +
+          $"\nКоличество дней прогресса: {habit.ProgressDays}");
       }
       var keyboard = new InlineKeyboardMarkup(new[]
        {
@@ -281,7 +374,19 @@ namespace HabitTracker
     }
 
     /// <summary>
-    /// Обрабатывает создание привычки.
+    /// Создает новую привычку.
+    /// </summary>
+    /// <param name="botClient">Клиент Telegram бота.</param>
+    /// <param name="chatId">Уникальный идентификатор чата пользователя.</param>
+    /// <returns>Задача, представляющая асинхронную операцию.</returns>
+    public async Task EditHabitAsync(ITelegramBotClient botClient, long chatId, string habitId)
+    {
+      await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Введите новое название привычки:");
+      UserStateTracker.SetUserState(chatId, $"awaiting_habit_rename_{habitId}");
+    }
+
+    /// <summary>
+    /// Обрабатывает создание привычки и редактирование ее данных.
     /// </summary>
     /// <param name="botClient">Клиент Telegram бота.</param>
     /// <param name="chatId">Уникальный идентификатор чата пользователя.</param>
@@ -308,8 +413,24 @@ namespace HabitTracker
 
         return;
       }      
-    }
+      else if(state.Contains("awaiting_habit_rename"))
+      {
+        var habitId = state.Remove(0, state.LastIndexOf('_') + 1);
+        await EditHabit(botClient, habitId, chatId, message);
+        UserStateTracker.ClearTemporaryData(chatId);
+        UserStateTracker.SetUserState(chatId, null);
+        var keyboard = new InlineKeyboardMarkup(new[]
+       {
+          new[]
+          {
+            InlineKeyboardButton.WithCallbackData("На главную", "/start")
+          }
+        });
+        await HabitTracker.TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Название привычки успешно изменено на {message}!", keyboard);
 
+        return;
+      }
+    }
     #endregion
 
     #region Конструкторы

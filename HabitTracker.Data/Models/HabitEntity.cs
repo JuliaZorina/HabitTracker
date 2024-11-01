@@ -41,7 +41,7 @@
     #region Конструкторы
     public HabitEntity() { }
 
-    public HabitEntity(Guid id, string name, DateOnly lastDay, HabitStatus status, long progressDays)
+    public HabitEntity(Guid id, string name, DateOnly? lastDay, HabitStatus status, long progressDays)
     {
       this.Id = id;
       this.Title = name;
