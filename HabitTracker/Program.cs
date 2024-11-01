@@ -39,7 +39,10 @@ namespace HabitTracker
         Console.WriteLine($"Отладка: Произошла ошибка - {ex.Message}");
         Debug.WriteLine($"Отладка: Подробности исключения - {ex}");
       }
+      /*finally
+      {
 
+      }*/
       Console.WriteLine("Отладка: Программа завершена");
 
       Console.WriteLine("Нажмите любую клавишу для выхода...");

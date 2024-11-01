@@ -53,7 +53,7 @@ namespace HabitTracker.Core
       var getUser = await GetByChatId(chatId);
       if (getUser == null)
       {
-        var newUser = new UserEntity(name, chatId);
+        var newUser = new UserEntity(Guid.NewGuid(),name, chatId);
         await usersRepository.Add(newUser);
       }
       else

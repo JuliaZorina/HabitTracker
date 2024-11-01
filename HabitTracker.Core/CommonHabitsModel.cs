@@ -20,9 +20,30 @@ namespace HabitTracker.Core
     #region Методы
 
     /// <summary>
+    /// Получить привычку по Id.
+    /// </summary>
+    /// <param name="id">уникальный идентификатор привычки.</param>
+    /// <param name="chatId">Уникальный идентификатор чата пользователя.</param>
+    /// <returns></returns>
+    public async Task<HabitEntity?> GetById(long chatId, Guid id)
+    {
+      var habitsRepository = new HabitsRepository(_dbContext);
+      var usersRepository = new UsersRepository(_dbContext);
+      UserEntity? foundUser = await usersRepository.GetByChatId(chatId);
+      if (foundUser != null)
+      {
+        return await habitsRepository.GetById(id);
+      }
+      else
+      {
+        throw new Exception("Пользователь с таким chatId не найден в базе данных");
+      }
+    }
+
+    /// <summary>
     /// Получить список привычек с выбранным статусом.
     /// </summary>
-    /// <param name="status">Статус задачи.</param>
+    /// <param name="status">Статус привычки.</param>
     /// <param name="chatId">Уникальный идентификатор чата пользователя.</param>
     /// <returns></returns>
     public async Task<List<HabitEntity>?> GetByStatus(long chatId,HabitStatus status)

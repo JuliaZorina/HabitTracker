@@ -126,28 +126,55 @@ namespace HabitTracker
         else if(callbackData.Contains($"{HabitStatus.Undone}_habit_") || callbackData.Contains($"{HabitStatus.Done}_habit_")
           || callbackData.Contains($"{HabitStatus.InProgress}_habit_"))
         {
+          var habitId = callbackData.Remove(0, callbackData.LastIndexOf('_')+1);
           var keyboard = new InlineKeyboardMarkup(new[]
           {
             new[]
             {
-              InlineKeyboardButton.WithCallbackData("Редактировать привычку", "/get_allHabits")
+              InlineKeyboardButton.WithCallbackData("Редактировать привычку", $"/edit_habit_{habitId}")
             },
             new[]
             {
-              InlineKeyboardButton.WithCallbackData("Отметить выполнение", "/get_undoneHabits")
+              InlineKeyboardButton.WithCallbackData("Отметить выполнение", $"/mark_as_done_{habitId}")
             },
             new[]
             {
-              InlineKeyboardButton.WithCallbackData("Удалить привычку", "/get_doneHabits")
+              InlineKeyboardButton.WithCallbackData("Удалить привычку", $"/delete_habit_{habitId}")
             },
             new[]
             {
               InlineKeyboardButton.WithCallbackData("На главную", "/start")
             },
           });
-          await TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Выберите действие с привычкой: ", keyboard, messageId);
+          var habit = await GetHabitById(chatId, Guid.Parse(habitId));
+          await TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Выберите действие с привычкой {habit.Title}: ", keyboard, messageId);
+        }
+        else if (callbackData.Contains($"/edit_habit_"))
+        {
+          var habitId = callbackData.Remove(0, callbackData.LastIndexOf('_') + 1);
+          
+        }
+        else if (callbackData.Contains($"/mark_as_done_"))
+        {
+          var habitId = callbackData.Remove(0, callbackData.LastIndexOf('_') + 1);
+        }
+        else if (callbackData.Contains($"/delete_habit_"))
+        {
+          var habitId = callbackData.Remove(0, callbackData.LastIndexOf('_') + 1);
         }
       }
+    }
+
+    /// <summary>
+    /// Получить привычку по ее идентификатору.
+    /// </summary>
+    /// <param name="chatId">Уникальный идентификатор чата пользователя.</param>
+    /// <param name="habitId">Уникальный идентификатор привычки.</param>
+    /// <returns></returns>
+    private async Task<HabitEntity?> GetHabitById(long chatId, Guid habitId)
+    {
+      var habitModel = new CommonHabitsModel(_dbContext);
+      return await habitModel.GetById(chatId, habitId);
     }
 
     /// <summary>
@@ -183,7 +210,7 @@ namespace HabitTracker
     }
 
     /// <summary>
-    /// 
+    /// Получить список привычек по статусу.
     /// </summary>
     /// <param name="botClient">Клиент Telegram бота.</param>
     /// <param name="chatId">Уникальный идентификатор чата пользователя.</param>
