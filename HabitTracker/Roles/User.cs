@@ -188,7 +188,37 @@ namespace HabitTracker
           var habitId = callbackData.Remove(0, callbackData.LastIndexOf('_') + 1);
           await DeleteHabitAsync(botClient, messageId, habitId, chatId);
         }
+        else if (callbackData.Contains($"/getStatistics"))
+        {
+          var habitId = callbackData.Remove(0, callbackData.LastIndexOf('_') + 1);
+          await GetHabitStatisticsAsync(_dbContext, botClient, messageId, habitId, chatId);
+        }
       }
+    }
+
+    private async Task GetHabitStatisticsAsync(HabitTrackerContext _dbContext, ITelegramBotClient botClient, int messageId, string habitId, long chatId)
+    {
+      var habitsModel = new CommonHabitsModel(_dbContext);
+      var habits = await habitsModel.GetAll(chatId);
+      var statistics = new UserHabitsStatistics(_dbContext);
+      var message = string.Empty;
+      if (habits.Count > 0)
+      {
+        await statistics.GetStatistics(habits);
+        message = "Файл со статистикой создан";
+      }
+      else
+      {
+        message = "У вас еще нет привычек";
+      }
+      var keyboard = new InlineKeyboardMarkup(new[]
+       {
+          new[]
+          {
+            InlineKeyboardButton.WithCallbackData("На главную", "/start")
+          }
+        });
+      await HabitTracker.TelegramBotHandler.SendMessageAsync(botClient, chatId, message, keyboard, messageId);
     }
 
     /// <summary>
