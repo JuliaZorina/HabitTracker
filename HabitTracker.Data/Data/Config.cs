@@ -3,6 +3,9 @@ using YamlDotNet.Serialization.NamingConventions;
 
 namespace HabitTracker.Data.Data
 {
+  /// <summary>
+  /// Класс для работы с файлом конфигурации приложения.
+  /// </summary>
   public class Config
   {
     /// <summary>

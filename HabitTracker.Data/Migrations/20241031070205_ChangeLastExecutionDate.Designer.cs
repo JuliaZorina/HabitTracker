@@ -3,6 +3,7 @@ using System;
 using HabitTracker.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace HabitTracker.Data.Migrations
 {
     [DbContext(typeof(HabitTrackerContext))]
-    partial class HabitTrackerContextModelSnapshot : ModelSnapshot
+    [Migration("20241031070205_ChangeLastExecutionDate")]
+    partial class ChangeLastExecutionDate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -34,15 +37,15 @@ namespace HabitTracker.Data.Migrations
                     b.Property<DateOnly?>("LastExecutionDate")
                         .HasColumnType("date");
 
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<long>("ProgressDays")
                         .HasColumnType("bigint");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");

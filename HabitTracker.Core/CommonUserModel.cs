@@ -10,6 +10,9 @@ namespace HabitTracker.Core
   {
     #region Поля и свойства
 
+    /// <summary>
+    /// Контекст базы данных.
+    /// </summary>
     private HabitTrackerContext _dbContext;
 
     #endregion
@@ -50,7 +53,7 @@ namespace HabitTracker.Core
       var getUser = await GetByChatId(chatId);
       if (getUser == null)
       {
-        var newUser = new UserEntity(name, chatId);
+        var newUser = new UserEntity(Guid.NewGuid(),name, chatId);
         await usersRepository.Add(newUser);
       }
       else
@@ -62,7 +65,7 @@ namespace HabitTracker.Core
     #endregion
 
     #region Конструкторы
-    CommonUserModel(HabitTrackerContext dbContext)
+    public CommonUserModel(HabitTrackerContext dbContext)
     {
       _dbContext = dbContext;
     }

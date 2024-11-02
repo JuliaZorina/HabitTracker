@@ -10,6 +10,9 @@ namespace HabitTracker.Core
   {
     #region Поля и свойства
 
+    /// <summary>
+    /// Контекст базы данных.
+    /// </summary>
     private HabitTrackerContext _dbContext;
 
     #endregion
@@ -17,9 +20,30 @@ namespace HabitTracker.Core
     #region Методы
 
     /// <summary>
+    /// Получить привычку по Id.
+    /// </summary>
+    /// <param name="id">уникальный идентификатор привычки.</param>
+    /// <param name="chatId">Уникальный идентификатор чата пользователя.</param>
+    /// <returns></returns>
+    public async Task<HabitEntity?> GetById(long chatId, Guid id)
+    {
+      var habitsRepository = new HabitsRepository(_dbContext);
+      var usersRepository = new UsersRepository(_dbContext);
+      UserEntity? foundUser = await usersRepository.GetByChatId(chatId);
+      if (foundUser != null)
+      {
+        return await habitsRepository.GetById(id);
+      }
+      else
+      {
+        throw new Exception("Пользователь с таким chatId не найден в базе данных");
+      }
+    }
+
+    /// <summary>
     /// Получить список привычек с выбранным статусом.
     /// </summary>
-    /// <param name="status">Статус задачи.</param>
+    /// <param name="status">Статус привычки.</param>
     /// <param name="chatId">Уникальный идентификатор чата пользователя.</param>
     /// <returns></returns>
     public async Task<List<HabitEntity>?> GetByStatus(long chatId,HabitStatus status)
@@ -38,24 +62,45 @@ namespace HabitTracker.Core
     }
 
     /// <summary>
-    /// Добавить новую привычку в базу данных.
+    /// Получить список всех привычек пользователя.
     /// </summary>
+    /// <param name="status">Статус задачи.</param>
     /// <param name="chatId">Уникальный идентификатор чата пользователя.</param>
-    /// <param name="title">Название привычки.</param>
-    public async void Add(long chatId, string title)
+    /// <returns></returns>
+    public async Task<List<HabitEntity>?> GetAll(long chatId)
     {
       var habitsRepository = new HabitsRepository(_dbContext);
       var usersRepository = new UsersRepository(_dbContext);
       UserEntity? foundUser = await usersRepository.GetByChatId(chatId);
       if (foundUser != null)
       {
+        return await habitsRepository.GetByFilter(foundUser.Id, string.Empty, null, null, null);
+      }
+      else
+      {
+        throw new Exception("Пользователь с таким chatId не найден в базе данных");
+      }
+    }
+
+    /// <summary>
+    /// Добавить новую привычку в базу данных.
+    /// </summary>
+    /// <param name="chatId">Уникальный идентификатор чата пользователя.</param>
+    /// <param name="title">Название привычки.</param>
+    public async void Add(HabitTrackerContext dbContext,long chatId, string title)
+    {
+      var habitsRepository = new HabitsRepository(dbContext);
+      var usersRepository = new UsersRepository(dbContext);
+      UserEntity? foundUser = await usersRepository.GetByChatId(chatId);
+      if (foundUser != null)
+      {
         var result = await habitsRepository.GetByFilter(foundUser.Id, title.ToLower(), null, null, null);
-        if (result == null)
+        if (result.Count == 0)
         {
           var habit = new HabitEntity(Guid.NewGuid(), foundUser.Id, title);
           await habitsRepository.Add(habit);
         }
-        else if (result != null && result.Count > 0)
+        else if (result.Count > 0)
         {
           //предложить продолжить уже существующую привычку
         }
@@ -74,7 +119,7 @@ namespace HabitTracker.Core
     /// <param name="lastDay">Дата последнего выполнения привычки.</param>
     /// <param name="status">Статус привычки.</param>
     /// <param name="progressDays">Количество дней прогресса привычки.</param>
-    public async void Update(Guid id, string name, DateOnly lastDay, HabitStatus status, long progressDays)
+    public async void Update(Guid id, string name, DateOnly? lastDay, HabitStatus status, long progressDays)
     {
       var habitsRepository = new HabitsRepository(_dbContext);
       var result = await habitsRepository.GetById(id);
@@ -102,7 +147,7 @@ namespace HabitTracker.Core
     #endregion
 
     #region Конструкторы
-    CommonHabitsModel(HabitTrackerContext dbContext)
+    public CommonHabitsModel(HabitTrackerContext dbContext)
     {
       _dbContext = dbContext;
     }

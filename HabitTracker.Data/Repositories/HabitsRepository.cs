@@ -6,6 +6,9 @@ namespace HabitTracker.Data.Repositories
   {
     #region Поля и свойства
 
+    /// <summary>
+    /// Контекст базы данных.
+    /// </summary>
     private readonly HabitTrackerContext _dbContext;
 
     #endregion
@@ -44,7 +47,7 @@ namespace HabitTracker.Data.Repositories
 
       if (!string.IsNullOrEmpty(title))
       {
-        query = query.Where(h => h.Name.Contains(title));
+        query = query.Where(h => h.Title.Contains(title));
       }
       if (createDate != null)
       {
@@ -67,13 +70,13 @@ namespace HabitTracker.Data.Repositories
     /// Добавить новую привычку в базу данных.
     /// </summary>
     /// <param name="habit">Экземпляр класса привычки.</param>
-    /// <returns></returns>
+    /// <returns>Задача, представляющая асинхронную операцию.</returns>
     public async Task Add(HabitEntity habit)
     {
       var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == habit.UserId) 
         ?? throw new ArgumentNullException("Не найден пользователь с указанным Id.");
 
-      var newHabit = new HabitEntity(habit.Id, habit.UserId, habit.Name);
+      var newHabit = new HabitEntity(habit.Id, habit.UserId, habit.Title);
 
       user.Habbits.Add(newHabit);
 
@@ -85,13 +88,13 @@ namespace HabitTracker.Data.Repositories
     /// Обновить данные о привычке.
     /// </summary>
     /// <param name="habit">Экземпляр класса привычки.</param>
-    /// <returns></returns>
+    /// <returns>Задача, представляющая асинхронную операцию.</returns>
     public async Task Update(HabitEntity habit)
     {
       await _dbContext.Habits
         .Where(h => h.Id == habit.Id)
         .ExecuteUpdateAsync(s => s
-          .SetProperty(h => h.Name, habit.Name)
+          .SetProperty(h => h.Title, habit.Title)
           .SetProperty(h => h.LastExecutionDate, habit.LastExecutionDate)
           .SetProperty(h => h.Status, habit.Status)
           .SetProperty(h => h.ProgressDays, habit.ProgressDays));

@@ -26,8 +26,14 @@
 
     public UserEntity(string name, long chatId)
     {
-      this.Id = Guid.NewGuid();
       this.Name = name; 
+      this.ChatId = chatId;
+    }
+
+    public UserEntity(Guid id, string name, long chatId)
+    {
+      this.Id = id;
+      this.Name = name;
       this.ChatId = chatId;
     }
 
