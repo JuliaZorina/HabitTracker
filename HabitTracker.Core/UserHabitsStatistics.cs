@@ -6,6 +6,9 @@ using System.Drawing;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
 using System.IO;
+using NPOI.SS.UserModel.Charts;
+using NPOI.SS.Util;
+using NPOI.SS.Formula.Functions;
 
 namespace HabitTracker.Core
 {
@@ -27,38 +30,52 @@ namespace HabitTracker.Core
 
     public async Task GetStatistics(List<HabitEntity> habits)
     {
-      Workbook wb = new Workbook();
-      Worksheet sheet = wb.Worksheets[0];
-      Worksheet worksheet = wb.Worksheets[0];
-      var i = 1;
-      
+      IWorkbook workbook = new XSSFWorkbook();
+      ISheet sheet = workbook.CreateSheet("Статистика");
+      var i = 0;
+
       foreach(var habit in habits)
       {
-        worksheet.Cells[$"A{i}"].PutValue(habit.ProgressDays);
-        worksheet.Cells[$"B{i}"].PutValue(habit.Title);
+        IRow row = sheet.CreateRow(i);
+        ICell cell = row.CreateCell(0);
+        cell.SetCellValue(habit.Title);
+        cell = row.CreateCell(1);
+        cell.SetCellValue(habit.ProgressDays);
         i++;
       }
-      int chartIndex = worksheet.Charts.Add(ChartType.Column, 0, 5, 25, 17);
-      Chart chart = worksheet.Charts[chartIndex];
-      chart.NSeries.Add($"A1:A{i}", true);
-      
-      chart.NSeries[0].Name = "Название привычки";
-      chart.NSeries[0].XValues = $"B1:B{i}";      
-      chart.ValueAxis.Title.Text = "Количество дней прогресса"; 
-      chart.PlotArea.Area.ForegroundColor = Color.WhiteSmoke;
-      foreach (Series series in chart.NSeries)
-      {
-        series.DataLabels.IsAutoText = false; 
-      }
 
-      chart.Title.Text = $"Статистика по прогрессу ваших привычек на {DateOnly.FromDateTime(DateTime.UtcNow)}";
-      chart.Legend.Position = LegendPositionType.Bottom;
-      
+      sheet.SetColumnWidth(0, 20 * 256);
+      sheet.SetColumnWidth(1, 10 * 256);
+
+      IDrawing drawing = sheet.CreateDrawingPatriarch();
+      IClientAnchor anchor = drawing.CreateAnchor(0, 0, 0, 0, 5, 0, 15, 20);
+      IChart chart = drawing.CreateChart(anchor);
+      IChartLegend legend = chart.GetOrCreateLegend();
+      legend.Position = LegendPosition.Bottom;
+      chart.SetTitle($"Статистика прогресса ваших привычек на {DateOnly.FromDateTime(DateTime.UtcNow)}");
+
+      IColumnChartData<double, double> data = chart.ChartDataFactory.CreateColumnChartData<double, double>();
+      //Ось X.
+      IChartAxis bottomAxis = chart.ChartAxisFactory.CreateCategoryAxis(AxisPosition.Bottom);
+      //Ось Y.
+      IValueAxis leftAxis = chart.ChartAxisFactory.CreateValueAxis(AxisPosition.Left);
+      leftAxis.Crosses = AxisCrosses.AutoZero;
+      IChartDataSource<double> xs = DataSources.FromNumericCellRange(sheet, new CellRangeAddress(0, i-1, 0, 0));
+      IChartDataSource<double> ys = DataSources.FromNumericCellRange(sheet, new CellRangeAddress(0, i-1, 1, 1));
+
+      var s1 = data.AddSeries(xs, ys);
+      s1.SetTitle($"Количество дней");
+
+      chart.Plot(data, bottomAxis, leftAxis);
+
       string dataDir = Directory.GetCurrentDirectory();
       var str = "Excel_Chart.xlsx";
       var saveDirectory = Path.Combine(dataDir, str);
 
-      wb.Save($"{saveDirectory}", SaveFormat.Xlsx);
+      using (var fileData = new FileStream(saveDirectory, FileMode.Create))
+      {
+        workbook.Write(fileData);
+      }
     }
 
     #endregion
