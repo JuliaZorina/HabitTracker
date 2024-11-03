@@ -1,7 +1,7 @@
 ﻿using HabitTracker.Data;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
+using HabitTracker.Data.Data;
 
 namespace HabitTracker
 {
@@ -17,13 +17,8 @@ namespace HabitTracker
     /// <returns>Экземпляр контекста базы данных.</returns>
     public HabitTrackerContext CreateDbContext(string[] args)
     {
-      var configuration = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("AppSettings.json", optional: true, reloadOnChange: true)
-            .Build();
-
       DbContextOptionsBuilder<HabitTrackerContext> optionsBuilder = new DbContextOptionsBuilder<HabitTrackerContext>()
-                .UseNpgsql(configuration.GetConnectionString("Postgre"));
+                .UseNpgsql(BotConfigManager.ConfigApp.DatabaseConnectionString);
 
       return new HabitTrackerContext(optionsBuilder.Options);
     }

@@ -20,7 +20,7 @@ namespace HabitTracker
 
       try
       {
-        var config = ApplicationData.ConfigApp;
+        var config = BotConfigManager.ConfigApp;
 
         Console.WriteLine("Конфигурация успешно загружена");
         Console.WriteLine($"Токен бота: {config.BotToken}");
@@ -41,7 +41,7 @@ namespace HabitTracker
       }
       finally
       {
-        var config = ApplicationData.ConfigApp;
+        var config = BotConfigManager.ConfigApp;
 
         Console.WriteLine("Конфигурация успешно загружена");
         Console.WriteLine($"Токен бота: {config.BotToken}");

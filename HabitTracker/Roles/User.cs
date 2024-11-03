@@ -181,7 +181,7 @@ namespace HabitTracker
         else if (callbackData.Contains($"/mark_as_done_"))
         {
           var habitId = callbackData.Remove(0, callbackData.LastIndexOf('_') + 1);
-          await EditHabit(botClient, messageId, habitId, HabitStatus.Done, chatId);
+          await MarkHabitComplete(botClient, messageId, habitId, HabitStatus.Done, chatId);
         }
         else if (callbackData.Contains($"/delete_habit_"))
         {
@@ -196,6 +196,15 @@ namespace HabitTracker
       }
     }
 
+    /// <summary>
+    /// Получить статистику пользователя по привычкам и отправить ее пользователю в формате .jpg.
+    /// </summary>
+    /// <param name="_dbContext">Контекст базы данных.</param>
+    /// <param name="botClient">Клиент Telegram бота.</param>
+    /// <param name="messageId">Уникальный идентификатор сообщения.</param>
+    /// <param name="habitId">Уникальный идентификатор привычки.</param>
+    /// <param name="chatId">Уникальный идентификатор чата.</param>
+    /// <returns>Задача, представляющая асинхронную операцию.</returns>
     private async Task GetHabitStatisticsAsync(HabitTrackerContext _dbContext, ITelegramBotClient botClient, int messageId, string habitId, long chatId)
     {
       var habitsModel = new CommonHabitsModel(_dbContext);
@@ -242,7 +251,7 @@ namespace HabitTracker
             InlineKeyboardButton.WithCallbackData("На главную", "/start")
           }
         });
-      await HabitTracker.TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Данные о привычке {title} обновлены", keyboard, messageId);
+      await HabitTracker.TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Привычка {title} удалена", keyboard, messageId);
     }
 
     /// <summary>
@@ -254,7 +263,7 @@ namespace HabitTracker
     /// <param name="status">Статус привычкии.</param>
     /// <param name="chatId">Уникальный идентификатор чата.</param>
     /// <returns>Задача, представляющая асинхронную операцию.</returns>
-    private async Task EditHabit(ITelegramBotClient botClient, int messageId, string habitId, HabitStatus status, long chatId)
+    private async Task MarkHabitComplete(ITelegramBotClient botClient, int messageId, string habitId, HabitStatus status, long chatId)
     {
       var habitsModel = new CommonHabitsModel(_dbContext);
       var habit = await GetHabitById(chatId, Guid.Parse(habitId));
@@ -269,7 +278,8 @@ namespace HabitTracker
             InlineKeyboardButton.WithCallbackData("На главную", "/start")
           }
         });
-      await HabitTracker.TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Данные о привычке {habit.Title} обновлены", keyboard, messageId);
+      await HabitTracker.TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Привычка {habit.Title} отмечена как выполненная", 
+        keyboard, messageId);
     }
     /// <summary>
     /// Отредактировать данные о привычке.
