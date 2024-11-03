@@ -242,7 +242,7 @@ namespace HabitTracker
             InlineKeyboardButton.WithCallbackData("На главную", "/start")
           }
         });
-      await HabitTracker.TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Данные о привычке {title} обновлены", keyboard, messageId);
+      await HabitTracker.TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Привычка {title} удалена", keyboard, messageId);
     }
 
     /// <summary>
@@ -269,7 +269,8 @@ namespace HabitTracker
             InlineKeyboardButton.WithCallbackData("На главную", "/start")
           }
         });
-      await HabitTracker.TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Данные о привычке {habit.Title} обновлены", keyboard, messageId);
+      await HabitTracker.TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Привычка {habit.Title} отмечена как выполненная", 
+        keyboard, messageId);
     }
     /// <summary>
     /// Отредактировать данные о привычке.

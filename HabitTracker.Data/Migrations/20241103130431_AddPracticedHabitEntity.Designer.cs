@@ -3,6 +3,7 @@ using System;
 using HabitTracker.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace HabitTracker.Data.Migrations
 {
     [DbContext(typeof(HabitTrackerContext))]
-    partial class HabitTrackerContextModelSnapshot : ModelSnapshot
+    [Migration("20241103130431_AddPracticedHabitEntity")]
+    partial class AddPracticedHabitEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -51,7 +54,7 @@ namespace HabitTracker.Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Habits", (string)null);
+                    b.ToTable("Habits");
                 });
 
             modelBuilder.Entity("HabitTracker.Data.Models.PracticedHabitEntity", b =>
@@ -70,7 +73,7 @@ namespace HabitTracker.Data.Migrations
 
                     b.HasIndex("HabitId");
 
-                    b.ToTable("PracticedHabits", (string)null);
+                    b.ToTable("PracticedHabits");
                 });
 
             modelBuilder.Entity("HabitTracker.Data.UserEntity", b =>
@@ -88,7 +91,7 @@ namespace HabitTracker.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("HabitTracker.Data.HabitEntity", b =>

@@ -20,9 +20,9 @@ namespace HabitTracker.Core
     {
       var fileName = $"ExcelChartToImage_{chatId}.jpg";
       PlotGraph(habits, fileName);
-
+      
       var filePath = Path.Combine(Directory.GetCurrentDirectory(), fileName);
-      var token = ApplicationData.ConfigApp.BotToken;
+      var token = BotConfigManager.ConfigApp.BotToken;
 
       if (!string.IsNullOrWhiteSpace(token) || System.IO.File.Exists(filePath))
       {

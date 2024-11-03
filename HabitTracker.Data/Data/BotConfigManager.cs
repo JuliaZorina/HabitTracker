@@ -3,7 +3,7 @@
   /// <summary>
   /// Данные для работы приложения.
   /// </summary>
-  static public class ApplicationData
+  static public class BotConfigManager
   {
     /// <summary>
     /// Конфигурация приложения.
@@ -13,9 +13,9 @@
     /// <summary>
     /// Данные, загруженные из файла конфигурации приложения.
     /// </summary>
-    static ApplicationData()
+    static BotConfigManager()
     {
-      ConfigApp = Config.LoadFromFile("config.yaml");
+      ConfigApp = Config.LoadFromFile(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.yaml"));
     }
   }
 }

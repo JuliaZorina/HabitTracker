@@ -1,5 +1,6 @@
 ﻿using HabitTracker.Data.Configurations;
 using HabitTracker.Data.Data;
+using HabitTracker.Data.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace HabitTracker.Data
@@ -21,6 +22,7 @@ namespace HabitTracker.Data
     /// Коллекция привычек в базе данных.
     /// </summary>
     public DbSet<HabitEntity> Habits { get; set; }
+    public DbSet<PracticedHabitEntity> PracticedHabits { get; set; }
 
     /// <summary>
     /// Настройки модели базы данных.
@@ -30,6 +32,7 @@ namespace HabitTracker.Data
     {
       modelBuilder.ApplyConfiguration(new UserConfiguration());
       modelBuilder.ApplyConfiguration(new HabitConfiguration());
+      modelBuilder.ApplyConfiguration(new PracticedHabitConfiguration());
 
       base.OnModelCreating(modelBuilder);
     }
@@ -41,7 +44,7 @@ namespace HabitTracker.Data
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
       //TODO : заменить ApplicationData.ConfigApp.DatabaseConnectionString на считывание данных из AppSettings.json
-      optionsBuilder.UseNpgsql(ApplicationData.ConfigApp.DatabaseConnectionString);
+      optionsBuilder.UseNpgsql(BotConfigManager.ConfigApp.DatabaseConnectionString);
       optionsBuilder.LogTo(logStream.WriteLine, new[] { DbLoggerCategory.Database.Command.Name });
     }
 
