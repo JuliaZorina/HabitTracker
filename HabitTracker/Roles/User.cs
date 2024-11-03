@@ -240,9 +240,13 @@ namespace HabitTracker
     private async Task DeleteHabitAsync(ITelegramBotClient botClient, int messageId, string habitId, long chatId)
     {
       var habitsModel = new CommonHabitsModel(_dbContext);
+      var practicedHabitsModel = new CommonPracticedHabitModel(_dbContext);
       var habit = await GetHabitById(chatId, Guid.Parse(habitId));
       var title = habit.Title;
+      practicedHabitsModel.Delete(Guid.Parse(habitId));
+      Thread.Sleep(1000);
       habitsModel.Delete(Guid.Parse(habitId));
+      
 
       var keyboard = new InlineKeyboardMarkup(new[]
        {
@@ -266,10 +270,13 @@ namespace HabitTracker
     private async Task MarkHabitComplete(ITelegramBotClient botClient, int messageId, string habitId, HabitStatus status, long chatId)
     {
       var habitsModel = new CommonHabitsModel(_dbContext);
+      var practicedHabitsModel = new CommonPracticedHabitModel(_dbContext);
       var habit = await GetHabitById(chatId, Guid.Parse(habitId));
       var lastDay = DateOnly.FromDateTime(DateTime.UtcNow);
       var progressDays = habit.ProgressDays + 1;
       habitsModel.Update(habit.Id, habit.Title,  lastDay, status, progressDays);
+      Thread.Sleep(1000);
+      practicedHabitsModel.Add(habit.Id, DateTime.UtcNow);
 
       var keyboard = new InlineKeyboardMarkup(new[]
        {

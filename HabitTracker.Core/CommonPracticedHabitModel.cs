@@ -7,7 +7,7 @@ namespace HabitTracker.Core
   /// <summary>
   /// Общие методы работы с записями о выполнении привычки.
   /// </summary>
-  class CommonPracticedHabitModel
+  public class CommonPracticedHabitModel
   {
     #region Поля и свойства
 
@@ -27,9 +27,9 @@ namespace HabitTracker.Core
     /// <param name="habitId">Уникальный идентификатор привычки.</param>
     /// <param name="dateTime">Дата и время последнего выполнения привычки.</param>
     /// <exception cref="ArgumentNullException">Выбрасывает исключение, если привычка с указанным Id не найдена в базе данных.</exception>
-    public async void Add(HabitTrackerContext dbContext, Guid habitId, DateTime dateTime)
+    public async void Add( Guid habitId, DateTime dateTime)
     {
-      var habitsRepository = new HabitsRepository(dbContext);
+      var habitsRepository = new HabitsRepository(_dbContext);
       var practicedHabitsRepository = new PracticedHabitRepository(_dbContext);
       HabitEntity? foundHabit = await habitsRepository.GetById(habitId);
       if (foundHabit != null)
