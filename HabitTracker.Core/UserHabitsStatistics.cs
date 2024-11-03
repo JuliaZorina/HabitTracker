@@ -2,7 +2,10 @@
 using Aspose.Cells.Charts;
 using Aspose.Cells.Rendering;
 using Aspose.Cells;
-using System.Drawing;
+using Telegram.Bot;
+using System.Text;
+using HabitTracker.Data.Data;
+using YamlDotNet.Core.Tokens;
 
 namespace HabitTracker.Core
 {
@@ -11,25 +14,45 @@ namespace HabitTracker.Core
   /// </summary>
   public class UserHabitsStatistics
   {
-    #region Поля и свойства
-
-    /// <summary>
-    /// Контекст базы данных.
-    /// </summary>
-    private HabitTrackerContext _dbContext;
-
-    #endregion
-
     #region Методы
+    
+    public static async Task SendStatistics(ITelegramBotClient botClient, long chatId, List<HabitEntity> habits)
+    {
+      var fileName = $"ExcelChartToImage_{chatId}.jpg";
+      PlotGraph(habits, fileName);
+
+      var filePath = Path.Combine(Directory.GetCurrentDirectory(), fileName);
+      var token = ApplicationData.ConfigApp.BotToken;
+
+      if (!string.IsNullOrWhiteSpace(token) || System.IO.File.Exists(filePath))
+      {
+        using (var form = new MultipartFormDataContent())
+        {
+          form.Add(new StringContent(chatId.ToString(), Encoding.UTF8), "chat_id");
+
+          using (var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+          {
+            form.Add(new StreamContent(fileStream), "photo", filePath.Split('\\').Last());
+
+            using (var client = new HttpClient())
+            {
+              await client.PostAsync($"https://api.telegram.org/bot{token}/sendPhoto", form);
+
+              Console.WriteLine($"Statistics send successfully to{chatId}");
+            }
+          }
+        }
+      }
+      System.IO.File.Delete(filePath);
+    }
 
     /// <summary>
     /// Построить график по количеству дней прогресса привычки.
     /// </summary>
     /// <param name="habits">Коллекция привычек пользователя.</param>
     /// <returns></returns>
-    public async Task PlotGraph(List<HabitEntity> habits)
+    private static void PlotGraph(List<HabitEntity> habits, string fileName)
     {
-
       Workbook wb = new Workbook();
       Worksheet sheet = wb.Worksheets[0];
       Worksheet worksheet = wb.Worksheets[0];
@@ -48,7 +71,7 @@ namespace HabitTracker.Core
       chart.NSeries[0].Name = "Название привычки";
       chart.NSeries[0].XValues = $"B1:B{i}";
       chart.ValueAxis.Title.Text = "Количество дней прогресса";
-      chart.PlotArea.Area.ForegroundColor = Color.WhiteSmoke;
+      chart.PlotArea.Area.ForegroundColor = System.Drawing.Color.WhiteSmoke;
       foreach (Series series in chart.NSeries)
       {
         series.DataLabels.IsAutoText = false;
@@ -59,16 +82,7 @@ namespace HabitTracker.Core
       ImageOrPrintOptions imageOrPrintOptions = new ImageOrPrintOptions();
       imageOrPrintOptions.ImageType = Aspose.Cells.Drawing.ImageType.Jpeg;
 
-      // Save chart as JPEG image
-      chart.ToImage("ExcelChartToImage.jpg", imageOrPrintOptions);
-    }
-
-    #endregion
-
-    #region Конструкторы
-    public UserHabitsStatistics(HabitTrackerContext dbContext)
-    {
-      _dbContext = dbContext;
+      chart.ToImage(fileName, imageOrPrintOptions);
     }
     #endregion
 

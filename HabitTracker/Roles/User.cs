@@ -200,11 +200,10 @@ namespace HabitTracker
     {
       var habitsModel = new CommonHabitsModel(_dbContext);
       var habits = await habitsModel.GetAll(chatId);
-      var statistics = new UserHabitsStatistics(_dbContext);
       var message = string.Empty;
       if (habits.Count > 0)
       {
-        await statistics.PlotGraph(habits);
+        await UserHabitsStatistics.SendStatistics(botClient, chatId, habits);
         message = "Файл со статистикой создан";
       }
       else
@@ -218,7 +217,7 @@ namespace HabitTracker
             InlineKeyboardButton.WithCallbackData("На главную", "/start")
           }
         });
-      await HabitTracker.TelegramBotHandler.SendMessageAsync(botClient, chatId, message, keyboard, messageId);
+      await HabitTracker.TelegramBotHandler.SendMessageAsync(botClient, chatId, message, keyboard);
     }
 
     /// <summary>
