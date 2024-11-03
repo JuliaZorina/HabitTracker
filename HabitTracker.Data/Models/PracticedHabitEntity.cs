@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace HabitTracker.Data.Models
+﻿namespace HabitTracker.Data.Models
 {
   /// <summary>
   /// Сущность привычки, которая выполняется.
@@ -19,7 +13,7 @@ namespace HabitTracker.Data.Models
     /// <summary>
     /// Уникальный идентификатор выполненной  привычки.
     /// </summary>
-    public Guid HabiitId { get; set; }
+    public Guid HabitId { get; set; }
     /// <summary>
     /// Ссылка на объект класса HabitEntity - выполняемой привычки.
     /// </summary>
@@ -28,5 +22,14 @@ namespace HabitTracker.Data.Models
     /// Дата и время выполнения привычки.
     /// </summary>
     public DateTime LastExecutionDate { get; set; }
+
+    #region Конструкторы
+    public PracticedHabitEntity(Guid id, Guid habitId, DateTime lastExecutionDate)
+    {
+      this.Id = id;
+      this.HabitId = habitId;
+      this.LastExecutionDate = lastExecutionDate;
+    }
+    #endregion
   }
 }

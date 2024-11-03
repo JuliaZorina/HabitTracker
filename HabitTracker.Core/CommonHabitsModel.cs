@@ -4,7 +4,7 @@ using HabitTracker.Data.Repositories;
 namespace HabitTracker.Core
 {
   /// <summary>
-  /// Статический класс, предоставляющий общие методы работы с моделью привычки.
+  /// Общие методы работы с моделью привычки.
   /// </summary>
   public class CommonHabitsModel
   {
@@ -99,10 +99,6 @@ namespace HabitTracker.Core
         {
           var habit = new HabitEntity(Guid.NewGuid(), foundUser.Id, title);
           await habitsRepository.Add(habit);
-        }
-        else if (result.Count > 0)
-        {
-          //предложить продолжить уже существующую привычку
         }
       }
       else
