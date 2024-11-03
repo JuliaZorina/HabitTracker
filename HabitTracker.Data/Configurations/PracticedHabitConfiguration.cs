@@ -19,7 +19,6 @@ namespace HabitTracker.Data.Configurations
       builder.HasKey(x => x.Id);
       builder.
         HasOne(h => h.Habit);
-    }
-    
+    }    
   }
 }
