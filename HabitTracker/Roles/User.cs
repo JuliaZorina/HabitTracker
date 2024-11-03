@@ -204,7 +204,7 @@ namespace HabitTracker
       var message = string.Empty;
       if (habits.Count > 0)
       {
-        await statistics.GetStatistics(habits);
+        await statistics.PlotGraph(habits);
         message = "Файл со статистикой создан";
       }
       else
