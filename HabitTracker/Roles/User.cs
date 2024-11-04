@@ -1,4 +1,5 @@
-﻿using HabitTracker.Core;
+﻿using Aspose.Cells.Charts;
+using HabitTracker.Core;
 using HabitTracker.Data;
 using HabitTracker.Interfaces;
 using HabitTracker.Models;
@@ -75,6 +76,26 @@ namespace HabitTracker
       {
         await ProcessCreatingHabitAsync(botClient, chatId, message);
       }
+      else if (!string.IsNullOrEmpty(UserStateTracker.GetUserState(chatId))
+        && UserStateTracker.GetUserState(chatId) == "awaiting_habit_execution_day")
+      {
+        await ProcessCreatingHabitAsync(botClient, chatId, message);
+      }
+      else if (!string.IsNullOrEmpty(UserStateTracker.GetUserState(chatId))
+        && UserStateTracker.GetUserState(chatId) == "awaiting_habit_frequency")
+      {
+        await ProcessCreatingHabitAsync(botClient, chatId, message);
+      }
+      else if (!string.IsNullOrEmpty(UserStateTracker.GetUserState(chatId))
+        && UserStateTracker.GetUserState(chatId) == "awaiting_habit_notify_start")
+      {
+        await ProcessCreatingHabitAsync(botClient, chatId, message);
+      }
+      else if (!string.IsNullOrEmpty(UserStateTracker.GetUserState(chatId))
+        && UserStateTracker.GetUserState(chatId) == "awaiting_habit_notify_end")
+      {
+        await ProcessCreatingHabitAsync(botClient, chatId, message);
+      }
       else
       {
         var keyboard = new InlineKeyboardMarkup(new[]
@@ -146,6 +167,16 @@ namespace HabitTracker
         else if (callbackData.Contains("/addNewHabit"))
         {
           await CreateHabitAsync(botClient, chatId);
+        }
+        else if (!string.IsNullOrEmpty(UserStateTracker.GetUserState(chatId))
+          &&UserStateTracker.GetUserState(chatId)== "awaiting_habit_necessary")
+        {
+          await ProcessCreatingHabitAsync(botClient, chatId, callbackData);
+        }
+        else if (!string.IsNullOrEmpty(UserStateTracker.GetUserState(chatId))
+          &&UserStateTracker.GetUserState(chatId)== "awaiting_habit_execution_day")
+        {
+          await ProcessCreatingHabitAsync(botClient, chatId, callbackData);
         }
         else if(callbackData.Contains($"{HabitStatus.Undone}_habit_") || callbackData.Contains($"{HabitStatus.Done}_habit_")
           || callbackData.Contains($"{HabitStatus.InProgress}_habit_"))
@@ -277,7 +308,6 @@ namespace HabitTracker
       Thread.Sleep(1000);
       habitsModel.Delete(Guid.Parse(habitId));
       
-
       var keyboard = new InlineKeyboardMarkup(new[]
         {
           new[]
@@ -472,11 +502,95 @@ namespace HabitTracker
     public async Task ProcessCreatingHabitAsync(ITelegramBotClient botClient, long chatId, string message)
     {
       var state = UserStateTracker.GetUserState(chatId);
-
-      if (state == "awaiting_habit_title")
+      if(state == "awaiting_habit_title")
       {
+        UserStateTracker.SetTemporaryData(chatId, "habit_title", message);
+        var keyboard = new InlineKeyboardMarkup(new[]
+        {
+          new[]
+          {
+            InlineKeyboardButton.WithCallbackData("Обязательно", "/necessary")
+          },
+          new[]
+          {
+            InlineKeyboardButton.WithCallbackData("Не обязательно", "/unnecessary")
+          }
+        });
+        await HabitTracker.TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Выберите необходимость выполнения привычки ежедневно привычки",
+          keyboard);
+
+        UserStateTracker.SetUserState(chatId, "awaiting_habit_necessary");
+      }
+      else if(state == "awaiting_habit_necessary")
+      {
+        if (message.Contains("necessary"))
+        {
+          UserStateTracker.SetTemporaryData(chatId, "habit_necessary", "true");
+        }
+        else if (message.Contains("unnecessary"))
+        {
+          UserStateTracker.SetTemporaryData(chatId, "habit_necessary", "false");
+        }
+          var keyboard = new InlineKeyboardMarkup(new[]
+        {
+          new[]
+          {
+            InlineKeyboardButton.WithCallbackData("Не устанавливать срок", "/endless")
+          }
+        });
+          await HabitTracker.TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Введите число дней выполнения привычки." +
+            $"\nЕсли хотите сделать привычку бессрочной, нажмите кнопку 'Не устанавливать срок'",
+            keyboard);
+          UserStateTracker.SetUserState(chatId, "awaiting_habit_execution_day");
+               
+      }
+      else if(state == "awaiting_habit_execution_day")
+      {
+        if(int.TryParse(message, out int value))
+        {
+          UserStateTracker.SetTemporaryData(chatId, "habit_execution_day", message);
+          await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Введите число того,  " +
+            "день вы хотите выполнять привычку:");
+          UserStateTracker.SetUserState(chatId, "awaiting_habit_frequency");
+        }
+        else if (message.Contains("/endless"))
+        {
+          UserStateTracker.SetTemporaryData(chatId, "habit_frequency", "null");
+          await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Введите число того, сколько раз за " +
+            "день вы хотите выполнять привычку:");
+          UserStateTracker.SetUserState(chatId, "awaiting_habit_frequency");
+        }
+      }
+      else if(state == "awaiting_habit_frequency")
+      {
+        if(int.TryParse(message, out int value))
+        {
+          UserStateTracker.SetTemporaryData(chatId, "habit_frequency", message);
+          await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Введите время начала отправки уведомлений:");
+          UserStateTracker.SetUserState(chatId, "awaiting_habit_notify_start");
+        }
+      }
+      else if (state == "awaiting_habit_notify_start")
+      {
+        if (TimeOnly.TryParse(message, out TimeOnly result))
+        {
+          UserStateTracker.SetTemporaryData(chatId, "habit_notify_start", message);
+          await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Введите время конца отправки уведомлений:");
+          UserStateTracker.SetUserState(chatId, "awaiting_habit_notify_end");
+        }
+      }
+      else if (state == "awaiting_habit_notify_end")
+      {        
         var habitsModel = new CommonHabitsModel(_dbContext);
-        habitsModel.Add(_dbContext, chatId, message);
+        var title = UserStateTracker.GetTemporaryData(chatId, "habit_title");
+        var numberOfExecutions = int.Parse(UserStateTracker.GetTemporaryData(chatId, "habit_frequency"));
+        DateTime? days = null;
+        if (int.TryParse(UserStateTracker.GetTemporaryData(chatId, "habit_execution_day"), out int daysNumber))
+        {
+          days = DateTime.Now.AddDays(daysNumber);
+        }       
+        var isNecessary = bool.Parse(UserStateTracker.GetTemporaryData(chatId, "habit_necessary"));
+        habitsModel.Add(chatId, title, numberOfExecutions, days, isNecessary);
         UserStateTracker.ClearTemporaryData(chatId);
         UserStateTracker.SetUserState(chatId, null);
         var keyboard = new InlineKeyboardMarkup(new[]
@@ -486,7 +600,7 @@ namespace HabitTracker
             InlineKeyboardButton.WithCallbackData("На главную", "/start")
           }
         });
-        await HabitTracker.TelegramBotHandler.SendMessageAsync(botClient, chatId, "Привычка успешно добавлена!", keyboard);
+        await HabitTracker.TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Привычка {title} успешно добавлена!", keyboard);
 
         return;
       }      

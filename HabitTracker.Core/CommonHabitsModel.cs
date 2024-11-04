@@ -126,14 +126,14 @@ namespace HabitTracker.Core
     /// </summary>
     /// <param name="chatId">Уникальный идентификатор чата пользователя.</param>
     /// <param name="title">Название привычки.</param>
-    public async void Add(HabitTrackerContext dbContext,long chatId, string title, int numberOfExecutions, int days, bool isNecessary)
+    public async void Add(long chatId, string title, int numberOfExecutions, DateTime? days, bool isNecessary)
     {
-      var habitsRepository = new HabitsRepository(dbContext);
-      var usersRepository = new UsersRepository(dbContext);
+      var habitsRepository = new HabitsRepository(_dbContext);
+      var usersRepository = new UsersRepository(_dbContext);
       UserEntity? foundUser = await usersRepository.GetByChatId(chatId);
       if (foundUser != null)
       {
-        var expirationDate = DateTime.Now.AddDays(days);
+        var expirationDate = days;
         var habit = new HabitEntity(Guid.NewGuid(), foundUser.Id, title, numberOfExecutions, expirationDate, isNecessary);
         await habitsRepository.Add(habit);
       }
