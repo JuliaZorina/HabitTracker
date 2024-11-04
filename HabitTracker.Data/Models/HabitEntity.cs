@@ -37,6 +37,18 @@
     /// Дата последнего выполнения привычки.
     /// </summary>
     public DateOnly? LastExecutionDate { get; set; }
+    /// <summary>
+    /// Обзязательность ежедневного выполнения.
+    /// </summary>
+    public bool IsNecessary { get; set; }
+    /// <summary>
+    /// Срок выполнения привычки.
+    /// </summary>
+    public DateTime? ExpirationDate {  get; set; }
+    /// <summary>
+    /// Количество раз выполнения привычки за день.
+    /// </summary>
+    public int NumberOfExecutions { get; set; }
 
     #region Конструкторы
     public HabitEntity() { }
