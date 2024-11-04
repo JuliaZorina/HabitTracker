@@ -213,7 +213,7 @@ namespace HabitTracker
     private async Task GetHabitStatisticsAsync(HabitTrackerContext _dbContext, ITelegramBotClient botClient, int messageId, string habitId, long chatId)
     {
       var habitsModel = new CommonHabitsModel(_dbContext);
-      var habits = await habitsModel.GetAll(chatId);
+      var habits = await habitsModel.GetAllActive(chatId);
       var message = string.Empty;
       if (habits.Count > 0)
       {
@@ -247,13 +247,7 @@ namespace HabitTracker
       var habitsModel = new CommonHabitsModel(_dbContext);
       var habit = await GetHabitById(chatId, Guid.Parse(habitId));
       var title = habit.Title;
-      /*
-      var practicedHabitsModel = new CommonPracticedHabitModel(_dbContext);
-      practicedHabitsModel.Delete(Guid.Parse(habitId));
-      Thread.Sleep(1000);
-      habitsModel.Delete(Guid.Parse(habitId));
-      */
-
+      
       var keyboard = new InlineKeyboardMarkup(new[]
         {
           new[]
@@ -363,7 +357,7 @@ namespace HabitTracker
     private async Task GetHabits(ITelegramBotClient botClient, long chatId, int messageId, string callbackData)
     {
       var habitModel = new CommonHabitsModel(_dbContext);
-      var habits = await habitModel.GetAll(chatId);
+      var habits = await habitModel.GetAllActive(chatId);
 
       var messageBuilder = new StringBuilder();
       messageBuilder.AppendLine($"Список всех привычек");

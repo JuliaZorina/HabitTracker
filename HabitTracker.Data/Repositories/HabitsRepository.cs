@@ -5,7 +5,7 @@ namespace HabitTracker.Data.Repositories
   public class HabitsRepository
   {
     #region Поля и свойства
-
+     
     /// <summary>
     /// Контекст базы данных.
     /// </summary>
@@ -74,6 +74,75 @@ namespace HabitTracker.Data.Repositories
 
       return await query.ToListAsync();
     }
+    /// <summary>
+    /// Получить список всех привычек пользователя.
+    /// </summary>
+    /// <param name="userId">Уникальный идентификатор пользователя.</param>
+    /// <returns></returns>
+    public async Task<List<HabitEntity>?> GetByFilter(Guid userId)
+    {
+      var query = _dbContext.Habits
+        .AsNoTracking()
+        .Where(h => h.UserId == userId);
+
+      return await query.ToListAsync();
+    }
+    /// <summary>
+    /// Получить список активных привычек с заданным статусом. 
+    /// </summary>
+    /// <param name="userId">Уникальный идентификатор пользователя.</param>
+    /// <param name="status">Статус привычки.</param>
+    /// <returns></returns>
+    public async Task<List<HabitEntity>?> GetByFilter(Guid userId, HabitStatus? status)
+    {
+      var query = _dbContext.Habits.AsNoTracking();
+
+      if (status != null)
+      {
+        query = query.Where(h => h.Status == status);
+      }
+     
+      query = query
+        .Where(h => h.UserId == userId)
+        .Where(h => h.IsSuspended == false);
+
+      return await query.ToListAsync();
+    }
+    /// <summary>
+    /// Получить список привычек пользователя в зависимости от того активна она или приостановлена.
+    /// </summary>
+    /// <param name="userId">Уникальный идентификатор пользователя.</param>
+    /// <param name="isSuspended">Статус активности привычки.</param>
+    /// <returns></returns>
+    public async Task<List<HabitEntity>?> GetByFilter(Guid userId, bool isSuspended)
+    {
+      var query = _dbContext.Habits.AsNoTracking();
+
+      query = query
+        .Where(h => h.IsSuspended == isSuspended)
+        .Where(h => h.UserId == userId);
+
+      return await query.ToListAsync();
+    }
+    /// <summary>
+    /// Получить список привычек в зависимости от статуса ее активности и обязательности.
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <param name="isSuspended"></param>
+    /// <param name="isNecessary"></param>
+    /// <returns></returns>
+    public async Task<List<HabitEntity>?> GetByFilter(Guid userId, bool isSuspended, bool isNecessary)
+    {
+      var query = _dbContext.Habits.AsNoTracking();
+
+      query = query
+        .Where(h => h.UserId == userId)
+        .Where(h => h.IsSuspended == isSuspended)
+        .Where(h => h.IsNecessary == isNecessary);
+
+      return await query.ToListAsync();
+    }
+
 
     /// <summary>
     /// Добавить новую привычку в базу данных.

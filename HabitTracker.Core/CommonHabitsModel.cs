@@ -41,7 +41,7 @@ namespace HabitTracker.Core
     }
 
     /// <summary>
-    /// Получить список привычек с выбранным статусом.
+    /// Получить список активных привычек с выбранным статусом.
     /// </summary>
     /// <param name="status">Статус привычки.</param>
     /// <param name="chatId">Уникальный идентификатор чата пользователя.</param>
@@ -53,7 +53,7 @@ namespace HabitTracker.Core
       UserEntity? foundUser = await usersRepository.GetByChatId(chatId);
       if (foundUser != null)
       {
-        return await habitsRepository.GetByFilter(foundUser.Id, string.Empty, null, null, status);
+        return await habitsRepository.GetByFilter(foundUser.Id, status);
       }
       else
       {
@@ -62,19 +62,18 @@ namespace HabitTracker.Core
     }
 
     /// <summary>
-    /// Получить список всех привычек пользователя.
+    /// Получить список всех активных привычек пользователя.
     /// </summary>
-    /// <param name="status">Статус задачи.</param>
     /// <param name="chatId">Уникальный идентификатор чата пользователя.</param>
     /// <returns></returns>
-    public async Task<List<HabitEntity>?> GetAll(long chatId)
+    public async Task<List<HabitEntity>?> GetAllActive(long chatId)
     {
       var habitsRepository = new HabitsRepository(_dbContext);
       var usersRepository = new UsersRepository(_dbContext);
       UserEntity? foundUser = await usersRepository.GetByChatId(chatId);
       if (foundUser != null)
       {
-        return await habitsRepository.GetByFilter(foundUser.Id, string.Empty, null, null, null);
+        return await habitsRepository.GetByFilter(foundUser.Id, false);
       }
       else
       {
@@ -83,23 +82,60 @@ namespace HabitTracker.Core
     }
 
     /// <summary>
+    /// Получить список всех приостановленных привычек пользователя.
+    /// </summary>
+    /// <param name="chatId">Уникальный идентификатор чата пользователя.</param>
+    /// <param name="isNecessary">Обязательность привычки.</param>
+    /// <returns></returns>
+    public async Task<List<HabitEntity>?> GetSuspendedHabit(long chatId)
+    {
+      var habitsRepository = new HabitsRepository(_dbContext);
+      var usersRepository = new UsersRepository(_dbContext);
+      UserEntity? foundUser = await usersRepository.GetByChatId(chatId);
+      if (foundUser != null)
+      {
+        return await habitsRepository.GetByFilter(foundUser.Id, true);
+      }
+      else
+      {
+        throw new Exception("Пользователь с таким chatId не найден в базе данных");
+      }
+    }
+
+    /// <summary>
+    /// Получить список всех активных привычек пользователя в зависимости от обязательности привычки.
+    /// </summary>
+    /// <param name="chatId">Уникальный идентификатор чата пользователя.</param>
+    /// <returns></returns>
+    public async Task<List<HabitEntity>?> GetNecessaryHabit(long chatId, bool isNecessary)
+    {
+      var habitsRepository = new HabitsRepository(_dbContext);
+      var usersRepository = new UsersRepository(_dbContext);
+      UserEntity? foundUser = await usersRepository.GetByChatId(chatId);
+      if (foundUser != null)
+      {
+        return await habitsRepository.GetByFilter(foundUser.Id, false, isNecessary);
+      }
+      else
+      {
+        throw new Exception("Пользователь с таким chatId не найден в базе данных");
+      }
+    }
+    /// <summary>
     /// Добавить новую привычку в базу данных.
     /// </summary>
     /// <param name="chatId">Уникальный идентификатор чата пользователя.</param>
     /// <param name="title">Название привычки.</param>
-    public async void Add(HabitTrackerContext dbContext,long chatId, string title)
+    public async void Add(HabitTrackerContext dbContext,long chatId, string title, int numberOfExecutions, int days, bool isNecessary)
     {
       var habitsRepository = new HabitsRepository(dbContext);
       var usersRepository = new UsersRepository(dbContext);
       UserEntity? foundUser = await usersRepository.GetByChatId(chatId);
       if (foundUser != null)
       {
-        var result = await habitsRepository.GetByFilter(foundUser.Id, title.ToLower(), null, null, null);
-        if (result.Count == 0)
-        {
-          var habit = new HabitEntity(Guid.NewGuid(), foundUser.Id, title);
-          await habitsRepository.Add(habit);
-        }
+        var expirationDate = DateTime.Now.AddDays(days);
+        var habit = new HabitEntity(Guid.NewGuid(), foundUser.Id, title, numberOfExecutions, expirationDate, isNecessary);
+        await habitsRepository.Add(habit);
       }
       else
       {
