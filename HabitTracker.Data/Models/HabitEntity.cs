@@ -57,13 +57,16 @@
     #region Конструкторы
     public HabitEntity() { }
 
-    public HabitEntity(Guid id, string name, DateOnly? lastDay, HabitStatus status, long progressDays)
+    public HabitEntity(Guid id, string name, DateOnly? lastDay, HabitStatus status, long progressDays, DateTime? expirationDate,
+      int numberOfExecutions)
     {
       this.Id = id;
       this.Title = name;
       this.LastExecutionDate = lastDay;
       this.Status = status;
       this.ProgressDays = progressDays;
+      this.ExpirationDate = expirationDate;
+      this.NumberOfExecutions = numberOfExecutions;
     }
 
     public HabitEntity(Guid id, Guid userId, string name, int numberOfExecutions, DateTime? expirationDate, bool isNecessary)

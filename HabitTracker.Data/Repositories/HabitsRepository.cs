@@ -177,7 +177,8 @@ namespace HabitTracker.Data.Repositories
           .SetProperty(h => h.Status, habit.Status)
           .SetProperty(h => h.ProgressDays, habit.ProgressDays)
           .SetProperty(h => h.IsSuspended, habit.IsSuspended)
-          .SetProperty(h => h.NumberOfExecutions, habit.NumberOfExecutions));
+          .SetProperty(h => h.NumberOfExecutions, habit.NumberOfExecutions)
+          .SetProperty(h => h.ExpirationDate, habit.ExpirationDate));
     }
     /// <summary>
     /// Удалить привычку из базы данных.

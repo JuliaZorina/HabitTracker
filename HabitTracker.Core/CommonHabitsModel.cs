@@ -151,13 +151,14 @@ namespace HabitTracker.Core
     /// <param name="lastDay">Дата последнего выполнения привычки.</param>
     /// <param name="status">Статус привычки.</param>
     /// <param name="progressDays">Количество дней прогресса привычки.</param>
-    public async void Update(Guid id, string name, DateOnly? lastDay, HabitStatus status, long progressDays)
+    public async void Update(Guid id, string name, DateOnly? lastDay, HabitStatus status, long progressDays, 
+      DateTime? expirationDate, int numberOfExecutions)
     {
       var habitsRepository = new HabitsRepository(_dbContext);
       var result = await habitsRepository.GetById(id);
       if (result != null)
       {
-        var habit = new HabitEntity(id, name, lastDay, status, progressDays);
+        var habit = new HabitEntity(id, name, lastDay, status, progressDays, expirationDate, numberOfExecutions);
         await habitsRepository.Update(habit);
       }      
     }
