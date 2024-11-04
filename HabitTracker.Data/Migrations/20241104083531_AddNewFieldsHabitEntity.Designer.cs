@@ -3,6 +3,7 @@ using System;
 using HabitTracker.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace HabitTracker.Data.Migrations
 {
     [DbContext(typeof(HabitTrackerContext))]
-    partial class HabitTrackerContextModelSnapshot : ModelSnapshot
+    [Migration("20241104083531_AddNewFieldsHabitEntity")]
+    partial class AddNewFieldsHabitEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -35,9 +38,6 @@ namespace HabitTracker.Data.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsNecessary")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsSuspended")
                         .HasColumnType("boolean");
 
                     b.Property<DateOnly?>("LastExecutionDate")

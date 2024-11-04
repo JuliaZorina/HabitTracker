@@ -41,7 +41,8 @@ namespace HabitTracker.Data.Repositories
     /// Получить привычки пользователя по списку фильтров.
     /// </summary>
     /// <returns>Асинхронно возвращает привычки, удовлетворяющие заданным фильтрам.</returns>
-    public async Task<List<HabitEntity>?> GetByFilter(Guid userId,string title, DateOnly? createDate, DateOnly? lastExecutionDate,HabitStatus? status)
+    public async Task<List<HabitEntity>?> GetByFilter(Guid userId,string title, DateOnly? createDate, 
+      DateOnly? lastExecutionDate,HabitStatus? status, bool isSuspended, bool isNecessary)
     {
       var query = _dbContext.Habits.AsNoTracking();
 
@@ -61,6 +62,14 @@ namespace HabitTracker.Data.Repositories
       {
         query = query.Where(h => h.Status == status);
       }
+      if (isSuspended)
+      {
+        query = query.Where(h => h.IsSuspended == isSuspended);
+      }
+      if (isNecessary)
+      {
+        query = query.Where(h => h.IsNecessary == isNecessary);
+      }
       query = query.Where(h => h.UserId == userId);
 
       return await query.ToListAsync();
@@ -75,8 +84,8 @@ namespace HabitTracker.Data.Repositories
     {
       var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == habit.UserId) 
         ?? throw new ArgumentNullException("Не найден пользователь с указанным Id.");
-
-      var newHabit = new HabitEntity(habit.Id, habit.UserId, habit.Title);
+      var newHabit = new HabitEntity(habit.Id, habit.UserId, habit.Title, habit.NumberOfExecutions, 
+        habit.ExpirationDate, habit.IsNecessary);
 
       user.Habbits.Add(newHabit);
 
@@ -97,7 +106,9 @@ namespace HabitTracker.Data.Repositories
           .SetProperty(h => h.Title, habit.Title)
           .SetProperty(h => h.LastExecutionDate, habit.LastExecutionDate)
           .SetProperty(h => h.Status, habit.Status)
-          .SetProperty(h => h.ProgressDays, habit.ProgressDays));
+          .SetProperty(h => h.ProgressDays, habit.ProgressDays)
+          .SetProperty(h => h.IsSuspended, habit.IsSuspended)
+          .SetProperty(h => h.NumberOfExecutions, habit.NumberOfExecutions));
     }
     /// <summary>
     /// Удалить привычку из базы данных.

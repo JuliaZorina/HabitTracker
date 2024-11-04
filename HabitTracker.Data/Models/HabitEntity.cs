@@ -37,6 +37,22 @@
     /// Дата последнего выполнения привычки.
     /// </summary>
     public DateOnly? LastExecutionDate { get; set; }
+    /// <summary>
+    /// Обзязательность ежедневного выполнения.
+    /// </summary>
+    public bool IsNecessary { get; set; }
+    /// <summary>
+    /// Срок выполнения привычки.
+    /// </summary>
+    public DateTime? ExpirationDate {  get; set; }
+    /// <summary>
+    /// Количество раз выполнения привычки за день.
+    /// </summary>
+    public int NumberOfExecutions { get; set; }
+    /// <summary>
+    /// Приостановлена привычка или нет.
+    /// </summary>
+    public bool IsSuspended { get; set; } 
 
     #region Конструкторы
     public HabitEntity() { }
@@ -50,7 +66,7 @@
       this.ProgressDays = progressDays;
     }
 
-    public HabitEntity(Guid id, Guid userId, string name)
+    public HabitEntity(Guid id, Guid userId, string name, int numberOfExecutions, DateTime? expirationDate, bool isNecessary)
     {
       this.Id = id;
       this.UserId = userId;
@@ -59,6 +75,10 @@
       this.LastExecutionDate = null;
       this.Status = HabitStatus.Undone;
       this.ProgressDays = 0;
+      this.IsSuspended = false;
+      this.NumberOfExecutions = numberOfExecutions;
+      this.ExpirationDate = expirationDate;
+      this.IsNecessary = isNecessary;
     }
     #endregion
   }
