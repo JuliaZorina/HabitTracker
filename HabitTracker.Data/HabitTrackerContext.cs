@@ -51,7 +51,6 @@ namespace HabitTracker.Data
     /// <param name="optionsBuilder">Объект для настройки параметров.</param>
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-      //TODO : заменить ApplicationData.ConfigApp.DatabaseConnectionString на считывание данных из AppSettings.json
       optionsBuilder.UseNpgsql(BotConfigManager.ConfigApp.DatabaseConnectionString);
       optionsBuilder.LogTo(logStream.WriteLine, new[] { DbLoggerCategory.Database.Command.Name });
     }

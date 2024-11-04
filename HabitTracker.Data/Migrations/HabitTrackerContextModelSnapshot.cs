@@ -64,7 +64,7 @@ namespace HabitTracker.Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Habits");
+                    b.ToTable("Habits", (string)null);
                 });
 
             modelBuilder.Entity("HabitTracker.Data.Models.HabitNotificationEntity", b =>
@@ -101,7 +101,7 @@ namespace HabitTracker.Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("HabitsNotificationSettings");
+                    b.ToTable("HabitsNotificationSettings", (string)null);
                 });
 
             modelBuilder.Entity("HabitTracker.Data.Models.PracticedHabitEntity", b =>
@@ -120,7 +120,7 @@ namespace HabitTracker.Data.Migrations
 
                     b.HasIndex("HabitId");
 
-                    b.ToTable("PracticedHabits");
+                    b.ToTable("PracticedHabits", (string)null);
                 });
 
             modelBuilder.Entity("HabitTracker.Data.UserEntity", b =>
@@ -138,7 +138,7 @@ namespace HabitTracker.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("HabitTracker.Data.HabitEntity", b =>

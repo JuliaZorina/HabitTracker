@@ -13,7 +13,7 @@ namespace HabitTracker.Data.Configurations
 
       builder.HasOne(x => x.Habit);
 
-      //builder.HasOne(x => x.User);
+      builder.HasOne(x => x.User);
       
     }
   }
