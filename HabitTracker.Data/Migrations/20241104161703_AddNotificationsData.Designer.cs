@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using HabitTracker.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace HabitTracker.Data.Migrations
 {
     [DbContext(typeof(HabitTrackerContext))]
-    partial class HabitTrackerContextModelSnapshot : ModelSnapshot
+    [Migration("20241104161703_AddNotificationsData")]
+    partial class AddNotificationsData
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -79,6 +82,9 @@ namespace HabitTracker.Data.Migrations
                     b.Property<Guid>("HabitId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("HabitNotificationEntityId")
+                        .HasColumnType("uuid");
+
                     b.Property<bool>("IsSending")
                         .HasColumnType("boolean");
 
@@ -98,6 +104,8 @@ namespace HabitTracker.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("HabitId");
+
+                    b.HasIndex("HabitNotificationEntityId");
 
                     b.HasIndex("UserId");
 
@@ -160,6 +168,10 @@ namespace HabitTracker.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("HabitTracker.Data.Models.HabitNotificationEntity", null)
+                        .WithMany("HabitNotifications")
+                        .HasForeignKey("HabitNotificationEntityId");
+
                     b.HasOne("HabitTracker.Data.UserEntity", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -180,6 +192,11 @@ namespace HabitTracker.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Habit");
+                });
+
+            modelBuilder.Entity("HabitTracker.Data.Models.HabitNotificationEntity", b =>
+                {
+                    b.Navigation("HabitNotifications");
                 });
 
             modelBuilder.Entity("HabitTracker.Data.UserEntity", b =>

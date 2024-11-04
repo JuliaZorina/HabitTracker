@@ -22,7 +22,14 @@ namespace HabitTracker.Data
     /// Коллекция привычек в базе данных.
     /// </summary>
     public DbSet<HabitEntity> Habits { get; set; }
+    /// <summary>
+    /// Коллекция записей о выполняемых привычках в базе данных.
+    /// </summary>
     public DbSet<PracticedHabitEntity> PracticedHabits { get; set; }
+    /// <summary>
+    /// Коллекция настроек уведомлений для конкретной привычки пользователя.
+    /// </summary>
+    public DbSet<HabitNotificationEntity> HabitsNotificationSettings { get; set; }
 
     /// <summary>
     /// Настройки модели базы данных.
@@ -33,6 +40,7 @@ namespace HabitTracker.Data
       modelBuilder.ApplyConfiguration(new UserConfiguration());
       modelBuilder.ApplyConfiguration(new HabitConfiguration());
       modelBuilder.ApplyConfiguration(new PracticedHabitConfiguration());
+      modelBuilder.ApplyConfiguration(new HabitNotificationEntityConfiguration());
 
       base.OnModelCreating(modelBuilder);
     }
