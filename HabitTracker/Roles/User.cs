@@ -186,6 +186,11 @@ namespace HabitTracker
         else if (callbackData.Contains($"/delete_habit_"))
         {
           var habitId = callbackData.Remove(0, callbackData.LastIndexOf('_') + 1);
+          await AssertHabitDelete(botClient, messageId, habitId, chatId);
+        }
+        else if (callbackData.Contains("/assert_delete_"))
+        {
+          var habitId = callbackData.Remove(0, callbackData.LastIndexOf('_') + 1);
           await DeleteHabitAsync(botClient, messageId, habitId, chatId);
         }
         else if (callbackData.Contains($"/getStatistics"))
@@ -237,25 +242,57 @@ namespace HabitTracker
     /// <param name="habitId">Уникальный идентификатор привычки.</param>
     /// <param name="chatId">Уникальный идентификатор чата.</param>
     /// <returns>Задача, представляющая асинхронную операцию.</returns>
+    private async Task AssertHabitDelete(ITelegramBotClient botClient, int messageId, string habitId, long chatId)
+    {
+      var habitsModel = new CommonHabitsModel(_dbContext);
+      var habit = await GetHabitById(chatId, Guid.Parse(habitId));
+      var title = habit.Title;
+      /*
+      var practicedHabitsModel = new CommonPracticedHabitModel(_dbContext);
+      practicedHabitsModel.Delete(Guid.Parse(habitId));
+      Thread.Sleep(1000);
+      habitsModel.Delete(Guid.Parse(habitId));
+      */
+
+      var keyboard = new InlineKeyboardMarkup(new[]
+        {
+          new[]
+          {
+            InlineKeyboardButton.WithCallbackData("Подтвердить удаление", $"/assert_delete_{habitId}")
+          },
+          new[]
+          {
+            InlineKeyboardButton.WithCallbackData("Отмена", $"/cancel_{habitId}")
+          },
+          new[]
+          {
+            InlineKeyboardButton.WithCallbackData("На главную", "/start")
+          }
+        });
+      await HabitTracker.TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Вы уверены, что хотите удалить привычку '{title}'?",
+        keyboard, messageId);
+    }
     private async Task DeleteHabitAsync(ITelegramBotClient botClient, int messageId, string habitId, long chatId)
     {
       var habitsModel = new CommonHabitsModel(_dbContext);
-      var practicedHabitsModel = new CommonPracticedHabitModel(_dbContext);
       var habit = await GetHabitById(chatId, Guid.Parse(habitId));
       var title = habit.Title;
+      
+      var practicedHabitsModel = new CommonPracticedHabitModel(_dbContext);
       practicedHabitsModel.Delete(Guid.Parse(habitId));
       Thread.Sleep(1000);
       habitsModel.Delete(Guid.Parse(habitId));
       
 
       var keyboard = new InlineKeyboardMarkup(new[]
-       {
+        {
           new[]
           {
             InlineKeyboardButton.WithCallbackData("На главную", "/start")
           }
         });
-      await HabitTracker.TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Привычка {title} удалена", keyboard, messageId);
+      await HabitTracker.TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Привычка '{title}' успешно удалена", 
+        keyboard, messageId);
     }
 
     /// <summary>
@@ -475,7 +512,7 @@ namespace HabitTracker
         await HabitTracker.TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Название привычки успешно изменено на {message}!", keyboard);
 
         return;
-      }
+      }     
     }
     #endregion
 
