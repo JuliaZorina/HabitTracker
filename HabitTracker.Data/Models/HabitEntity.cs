@@ -58,7 +58,7 @@
     public HabitEntity() { }
 
     public HabitEntity(Guid id, string name, DateOnly? lastDay, HabitStatus status, long progressDays, DateTime? expirationDate,
-      int numberOfExecutions)
+      int numberOfExecutions, bool isSuspeded)
     {
       this.Id = id;
       this.Title = name;
@@ -67,6 +67,7 @@
       this.ProgressDays = progressDays;
       this.ExpirationDate = expirationDate;
       this.NumberOfExecutions = numberOfExecutions;
+      this.IsSuspended = isSuspeded;
     }
 
     public HabitEntity(Guid id, Guid userId, string name, int numberOfExecutions, DateTime? expirationDate, bool isNecessary)
