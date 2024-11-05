@@ -46,6 +46,18 @@ namespace HabitTracker.Data.Repositories
         .AsNoTracking()
         .FirstOrDefaultAsync(n => habitId == n.HabitId);
     }
+    /// <summary>
+    /// Получить настройки уведомлений для привычек пользователя по уникальному идентификатору общих настроек.
+    /// </summary>
+    /// <returns>Асинхронно получает коллекцию настроек уведомлений пользователя для привычек, 
+    /// найденных по уникальному идентификатору общих настроек уведомлений.</returns>
+    public async Task<List<HabitNotificationEntity>?> GetByNotificationSettingsId(Guid notificationSettingsId)
+    {
+      return await _dbContext.HabitsNotificationSettings
+        .AsNoTracking()
+        .Where(n => notificationSettingsId == n.UserNotificationsId)
+        .ToListAsync();
+    }
 
     /// <summary>
     /// Добавить настройки уведомлений новой привычки в базу данных.
@@ -54,6 +66,13 @@ namespace HabitTracker.Data.Repositories
     /// <returns>Задача, представляющая асинхронную операцию.</returns>
     public async Task Add(HabitNotificationEntity habitNotification)
     {
+      var notification = await _dbContext.NotificationSettings.FirstOrDefaultAsync(u => u.Id == habitNotification.UserNotificationsId)
+        ?? throw new ArgumentNullException("Не найдены настройки уведомлений с указанным Id.");
+      var newHabitNotification = new HabitNotificationEntity(habitNotification.Id, habitNotification.HabitId, habitNotification.UserNotificationsId,
+        habitNotification.IsSending, habitNotification.CountOfNotifications);
+
+      notification.HabitNotifications.Add(newHabitNotification);
+
       await _dbContext.AddAsync(habitNotification);
       await _dbContext.SaveChangesAsync();
     }
