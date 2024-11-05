@@ -12,8 +12,10 @@ namespace HabitTracker.Data.Configurations
       builder.HasKey(x => x.Id);
 
       builder.HasOne(x => x.Habit);
-
-      builder.HasOne(x => x.User);
+      builder
+        .HasOne(x =>x.Notification)
+        .WithMany(n => n.HabitNotifications)
+        .HasForeignKey(n => n.UserNotificationsId);
       
     }
   }

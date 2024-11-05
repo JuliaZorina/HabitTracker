@@ -2,8 +2,12 @@
 
 namespace HabitTracker.Data.Models
 {
-  public class HabitNotificationEntity : NotificationEntity
+  public class HabitNotificationEntity 
   {   
+    /// <summary>
+    /// Уникальный идентификатор настройки привычки.
+    /// </summary>
+    public Guid Id { get; set; }
     /// <summary>
     /// Уникальный идентификатор привычки.
     /// </summary>
@@ -12,6 +16,15 @@ namespace HabitTracker.Data.Models
     /// Экземпляр класса HabitEntity - владелец настроек уведомлений конкретной привычки.
     /// </summary>
     public HabitEntity Habit { get; set; }
+    /// <summary>
+    /// Уникальный идентификатор настроек уведомлений пользователя.
+    /// </summary>
+    public Guid UserNotificationsId { get; set; }
+    /// <summary>
+    /// Экземпляр класса Notification  - настроек уведомлений пользователя.
+    /// </summary>
+    public NotificationEntity Notification { get; set; }
+
     /// <summary>
     /// Отправлять уведомления или нет.
     /// </summary>
@@ -23,30 +36,12 @@ namespace HabitTracker.Data.Models
     /// <summary>
     /// Коллекция со временем отправки уведомлений.
     /// </summary>
-    public List<TimeOnly> NotificationTime
+    public List<TimeOnly> NotificationTime { get; set; } = [];
+    public HabitNotificationEntity(Guid id, Guid habitId, Guid userNotificationsId, bool isSending, int countOfNotifications) 
     {
-      get { return this.NotificationTime; }
-      private set
-      {
-        var period = (this.TimeEnd - this.TimeStart) / this.CountOfNotifications;
-        for (int i = 0; i < this.CountOfNotifications; i++)
-        {
-          if (i == 0)
-          {
-            this.NotificationTime.Add(TimeStart);
-          }
-          else
-          {
-            NotificationTime.Add(TimeStart.AddHours(period.TotalHours));
-          }
-        }
-      }
-    }
-    
-    public HabitNotificationEntity(Guid id, Guid userId, TimeOnly timeStart, TimeOnly timeEnd, Guid habitId, bool isSending, int countOfNotifications) 
-      : base(id, userId, timeStart, timeEnd)
-    {
+      this.Id = id;
       this.HabitId = habitId; 
+      this.UserNotificationsId = userNotificationsId;  
       this.IsSending = isSending;
       this.CountOfNotifications = countOfNotifications;      
     }

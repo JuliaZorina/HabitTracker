@@ -70,8 +70,6 @@ namespace HabitTracker.Data.Repositories
         .ExecuteUpdateAsync(s => s
           .SetProperty(n => n.CountOfNotifications, habitNotification.CountOfNotifications)
           .SetProperty(n => n.IsSending, habitNotification.IsSending)
-          .SetProperty(n => n.TimeStart, habitNotification.TimeStart)
-          .SetProperty(n => n.TimeEnd, habitNotification.TimeEnd)
           .SetProperty(n => n.NotificationTime, habitNotification.NotificationTime));
     }
     /// <summary>

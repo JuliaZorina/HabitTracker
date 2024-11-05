@@ -27,6 +27,11 @@
     /// Время конца рассылки уведомлений.
     /// </summary>
     public TimeOnly TimeEnd { get; set; }
+    /// <summary>
+    /// Коллекция настроек уведомлений для каждой привычки пользователя.
+    /// </summary>
+    public List<HabitNotificationEntity> HabitNotifications { get; set; } = [];
+
     #endregion
 
     #region Конструкторы

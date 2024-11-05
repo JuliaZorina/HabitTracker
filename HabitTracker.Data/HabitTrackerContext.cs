@@ -30,6 +30,7 @@ namespace HabitTracker.Data
     /// Коллекция настроек уведомлений для конкретной привычки пользователя.
     /// </summary>
     public DbSet<HabitNotificationEntity> HabitsNotificationSettings { get; set; }
+    public DbSet<NotificationEntity> NotificationSettings { get; set; }
 
     /// <summary>
     /// Настройки модели базы данных.
@@ -41,6 +42,7 @@ namespace HabitTracker.Data
       modelBuilder.ApplyConfiguration(new HabitConfiguration());
       modelBuilder.ApplyConfiguration(new PracticedHabitConfiguration());
       modelBuilder.ApplyConfiguration(new HabitNotificationEntityConfiguration());
+      modelBuilder.ApplyConfiguration(new NotificationConfiguration());
 
       base.OnModelCreating(modelBuilder);
     }

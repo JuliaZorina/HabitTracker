@@ -19,7 +19,7 @@ namespace HabitTracker
     /// <returns>Экземпляр контекста базы данных.</returns>
     public HabitTrackerContext CreateDbContext(string[] args)
     {
-     // Debugger.Launch();
+      Debugger.Launch();
       DbContextOptionsBuilder<HabitTrackerContext> optionsBuilder = new DbContextOptionsBuilder<HabitTrackerContext>()
                 .UseNpgsql(BotConfigManager.ConfigApp.DatabaseConnectionString);
 
