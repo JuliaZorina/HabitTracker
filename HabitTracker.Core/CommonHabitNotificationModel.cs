@@ -50,15 +50,20 @@ namespace HabitTracker.Core
     /// <param name="isSending">Статус активности данной привычки.</param>
     /// <param name="countOfNotifications">Количество уведомлений для привычки.</param>
     /// <exception cref="Exception"></exception>
-    public async void Add(long chatId, TimeOnly timeStart, TimeOnly timeEnd, Guid habitId, bool isSending, int countOfNotifications)
+    public async void Add(long chatId, Guid habitId, bool isSending, int countOfNotifications)
     {
       var habitsNotificationRepository = new HabitNotificationRepository(_dbContext);
+      var notificationRepository = new NotificationRepository(_dbContext);
       var usersRepository = new UsersRepository(_dbContext);
       UserEntity? foundUser = await usersRepository.GetByChatId(chatId);
       if (foundUser != null)
       {
-        var habitNotification = new HabitNotificationEntity(Guid.NewGuid(), foundUser.Id, timeStart, timeEnd, habitId, isSending, countOfNotifications);
-        await habitsNotificationRepository.Add(habitNotification);
+        NotificationEntity? foundNotification = await notificationRepository.GetByUserId(foundUser.Id);
+        if(foundNotification != null)
+        {
+          var habitNotification = new HabitNotificationEntity(Guid.NewGuid(), habitId, foundNotification.Id, isSending, countOfNotifications);
+          await habitsNotificationRepository.Add(habitNotification);
+        }        
       }
       else
       {
@@ -81,28 +86,6 @@ namespace HabitTracker.Core
         foundNotification.IsSending = isSending;
         foundNotification.CountOfNotifications = countOfNotifications;
         await habitsNotificationRepository.Update(foundNotification);
-      }
-    }
-
-    /// <summary>
-    /// Обновить период отправки для всех уведомлений пользователя.
-    /// </summary>
-    /// <param name="userId">Уникальный идентификатор привычки.</param>
-    /// <param name="timeStart">Дата последнего выполнения привычки.</param>
-    /// <param name="timeEnd">Статус привычки.</param>
-    public async void UpdateAllUserNotification(Guid userId, TimeOnly timeStart, TimeOnly timeEnd)
-    {
-      var habitsNotificationRepository = new HabitNotificationRepository(_dbContext);
-      var userNotifications = await habitsNotificationRepository.GetByUserId(userId);
-
-      if (userNotifications != null)
-      {
-        foreach( var userNotification in userNotifications)
-        {
-          userNotification.TimeStart = timeStart;
-          userNotification.TimeEnd = timeEnd;
-          await habitsNotificationRepository.Update(userNotification);
-        }        
       }
     }
 
