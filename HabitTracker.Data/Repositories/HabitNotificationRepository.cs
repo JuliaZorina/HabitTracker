@@ -46,6 +46,17 @@ namespace HabitTracker.Data.Repositories
         .AsNoTracking()
         .FirstOrDefaultAsync(n => habitId == n.HabitId);
     }
+    /// <summary>
+    /// Получить настройки уведомлений для всех привычек пользователя.
+    /// </summary>
+    /// <returns>Асинхронно настройки уведомлений пользователя для привычки, найденные по уникальному идентификатору привычки.</returns>
+    public async Task<List<HabitNotificationEntity>?> GetByUserId(Guid userId)
+    {
+      return await _dbContext.HabitsNotificationSettings
+        .AsNoTracking()
+        .Where(h => h.UserId == userId)
+        .ToListAsync();
+    }
 
     /// <summary>
     /// Добавить настройки уведомлений новой привычки в базу данных.
