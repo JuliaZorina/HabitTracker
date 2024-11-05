@@ -26,7 +26,7 @@ namespace HabitTracker.Data.Models
     public List<TimeOnly> NotificationTime
     {
       get { return this.NotificationTime; }
-      set
+      private set
       {
         var period = (this.TimeEnd - this.TimeStart) / this.CountOfNotifications;
         for (int i = 0; i < this.CountOfNotifications; i++)
