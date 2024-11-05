@@ -7,7 +7,6 @@ namespace HabitTracker.Core
 {
   public class CommonHabitNotificationModel
   {
-
     #region Поля и свойства
 
     /// <summary>
@@ -44,8 +43,6 @@ namespace HabitTracker.Core
     /// Добавить настройки новой привычки в базу данных.
     /// </summary>
     /// <param name="chatId">Уникальный идентификатор чата.</param>
-    /// <param name="timeStart">Время начала отправки уведомлений.</param>
-    /// <param name="timeEnd">Время конца отправки уведомлений.</param>
     /// <param name="habitId">Уникальный идентификатор привычки.</param>
     /// <param name="isSending">Статус активности данной привычки.</param>
     /// <param name="countOfNotifications">Количество уведомлений для привычки.</param>
