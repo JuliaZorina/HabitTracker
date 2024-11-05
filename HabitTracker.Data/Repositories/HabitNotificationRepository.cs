@@ -47,14 +47,15 @@ namespace HabitTracker.Data.Repositories
         .FirstOrDefaultAsync(n => habitId == n.HabitId);
     }
     /// <summary>
-    /// Получить настройки уведомлений для всех привычек пользователя.
+    /// Получить настройки уведомлений для привычек пользователя по уникальному идентификатору общих настроек.
     /// </summary>
-    /// <returns>Асинхронно настройки уведомлений пользователя для привычки, найденные по уникальному идентификатору привычки.</returns>
-    public async Task<List<HabitNotificationEntity>?> GetByUserId(Guid userId)
+    /// <returns>Асинхронно получает коллекцию настроек уведомлений пользователя для привычек, 
+    /// найденных по уникальному идентификатору общих настроек уведомлений.</returns>
+    public async Task<List<HabitNotificationEntity>?> GetByNotificationSettingsId(Guid notificationSettingsId)
     {
       return await _dbContext.HabitsNotificationSettings
         .AsNoTracking()
-        .Where(h => h.UserId == userId)
+        .Where(n => notificationSettingsId == n.UserNotificationsId)
         .ToListAsync();
     }
 
@@ -65,6 +66,13 @@ namespace HabitTracker.Data.Repositories
     /// <returns>Задача, представляющая асинхронную операцию.</returns>
     public async Task Add(HabitNotificationEntity habitNotification)
     {
+      var notification = await _dbContext.NotificationSettings.FirstOrDefaultAsync(u => u.Id == habitNotification.UserNotificationsId)
+        ?? throw new ArgumentNullException("Не найдены настройки уведомлений с указанным Id.");
+      var newHabitNotification = new HabitNotificationEntity(habitNotification.Id, habitNotification.HabitId, habitNotification.UserNotificationsId,
+        habitNotification.IsSending, habitNotification.CountOfNotifications);
+
+      notification.HabitNotifications.Add(newHabitNotification);
+
       await _dbContext.AddAsync(habitNotification);
       await _dbContext.SaveChangesAsync();
     }
@@ -81,8 +89,6 @@ namespace HabitTracker.Data.Repositories
         .ExecuteUpdateAsync(s => s
           .SetProperty(n => n.CountOfNotifications, habitNotification.CountOfNotifications)
           .SetProperty(n => n.IsSending, habitNotification.IsSending)
-          .SetProperty(n => n.TimeStart, habitNotification.TimeStart)
-          .SetProperty(n => n.TimeEnd, habitNotification.TimeEnd)
           .SetProperty(n => n.NotificationTime, habitNotification.NotificationTime));
     }
     /// <summary>

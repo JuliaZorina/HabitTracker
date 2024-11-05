@@ -64,7 +64,7 @@ namespace HabitTracker.Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Habits", (string)null);
+                    b.ToTable("Habits");
                 });
 
             modelBuilder.Entity("HabitTracker.Data.Models.HabitNotificationEntity", b =>
@@ -86,6 +86,24 @@ namespace HabitTracker.Data.Migrations
                         .IsRequired()
                         .HasColumnType("time without time zone[]");
 
+                    b.Property<Guid>("UserNotificationsId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HabitId");
+
+                    b.HasIndex("UserNotificationsId");
+
+                    b.ToTable("HabitsNotificationSettings");
+                });
+
+            modelBuilder.Entity("HabitTracker.Data.Models.NotificationEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
                     b.Property<TimeOnly>("TimeEnd")
                         .HasColumnType("time without time zone");
 
@@ -97,11 +115,9 @@ namespace HabitTracker.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("HabitId");
-
                     b.HasIndex("UserId");
 
-                    b.ToTable("HabitsNotificationSettings", (string)null);
+                    b.ToTable("NotificationSettings");
                 });
 
             modelBuilder.Entity("HabitTracker.Data.Models.PracticedHabitEntity", b =>
@@ -120,7 +136,7 @@ namespace HabitTracker.Data.Migrations
 
                     b.HasIndex("HabitId");
 
-                    b.ToTable("PracticedHabits", (string)null);
+                    b.ToTable("PracticedHabits");
                 });
 
             modelBuilder.Entity("HabitTracker.Data.UserEntity", b =>
@@ -138,7 +154,7 @@ namespace HabitTracker.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("HabitTracker.Data.HabitEntity", b =>
@@ -160,13 +176,24 @@ namespace HabitTracker.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("HabitTracker.Data.Models.NotificationEntity", "Notification")
+                        .WithMany("HabitNotifications")
+                        .HasForeignKey("UserNotificationsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Habit");
+
+                    b.Navigation("Notification");
+                });
+
+            modelBuilder.Entity("HabitTracker.Data.Models.NotificationEntity", b =>
+                {
                     b.HasOne("HabitTracker.Data.UserEntity", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Habit");
 
                     b.Navigation("User");
                 });
@@ -180,6 +207,11 @@ namespace HabitTracker.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Habit");
+                });
+
+            modelBuilder.Entity("HabitTracker.Data.Models.NotificationEntity", b =>
+                {
+                    b.Navigation("HabitNotifications");
                 });
 
             modelBuilder.Entity("HabitTracker.Data.UserEntity", b =>
