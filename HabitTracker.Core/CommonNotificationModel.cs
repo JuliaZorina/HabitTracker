@@ -22,7 +22,7 @@ namespace HabitTracker.Core
     /// </summary>
     /// <param name="chatId">Уникальный идентификатор чата пользователя.</param>
     /// <returns></returns>
-    public async Task<NotificationEntity?> GetByUserId(long chatId)
+    public async Task<NotificationEntity?> GetByUserChatId(long chatId)
     {
       var notificationRepository = new NotificationRepository(_dbContext);
       var usersRepository = new UsersRepository(_dbContext);

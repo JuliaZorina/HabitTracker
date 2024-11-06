@@ -1,5 +1,6 @@
 ﻿using HabitTracker.Core;
 using HabitTracker.Data;
+using HabitTracker.Models;
 using System.Threading;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
@@ -130,6 +131,7 @@ namespace HabitTracker
       {
         userModel.Add(userName, chatId);
         await _botClient.SendTextMessageAsync(chatId, $"{userName}, добро пожаловать!");
+        UserStateTracker.SetUserState(chatId, "awaiting_notification_settings");
       }
       var user = new User(userName, chatId, _dbContext);
       await user.ProcessMessageAsync(_botClient, chatId, messageText);
