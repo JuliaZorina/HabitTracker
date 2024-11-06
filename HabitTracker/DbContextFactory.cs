@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.EntityFrameworkCore;
 using HabitTracker.Data.Data;
+using System.Diagnostics;
 
 namespace HabitTracker
 {
@@ -10,6 +11,7 @@ namespace HabitTracker
   /// </summary>
   public class DbContextFactory : IDesignTimeDbContextFactory<HabitTrackerContext>
   {
+    
     /// <summary>
     /// Метод для создания контекста базы данных.
     /// </summary>
@@ -17,6 +19,7 @@ namespace HabitTracker
     /// <returns>Экземпляр контекста базы данных.</returns>
     public HabitTrackerContext CreateDbContext(string[] args)
     {
+      Debugger.Launch();
       DbContextOptionsBuilder<HabitTrackerContext> optionsBuilder = new DbContextOptionsBuilder<HabitTrackerContext>()
                 .UseNpgsql(BotConfigManager.ConfigApp.DatabaseConnectionString);
 
