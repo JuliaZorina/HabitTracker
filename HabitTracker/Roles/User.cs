@@ -138,7 +138,7 @@ namespace HabitTracker
         }
         else if (callbackData.Contains("/start"))
         {
-          await botClient.DeleteMessageAsync(chatId, messageId);
+          //await botClient.DeleteMessageAsync(chatId, messageId);
           await Task.Delay(10);
           await ProcessMessageAsync(botClient, chatId, callbackData);
         }
@@ -685,8 +685,31 @@ namespace HabitTracker
           await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Введите время начала отправки уведомлений:");
           UserStateTracker.SetUserState(chatId, "awaiting_habit_notify_start");
         }
+        var habitsModel = new CommonHabitsModel(_dbContext);
+        var title = UserStateTracker.GetTemporaryData(chatId, "habit_title");
+        var numberOfExecutions = int.Parse(UserStateTracker.GetTemporaryData(chatId, "habit_frequency"));
+        DateTime? days = null;
+        if (int.TryParse(UserStateTracker.GetTemporaryData(chatId, "habit_execution_day"), out int daysNumber))
+        {
+          days = DateTime.UtcNow.AddDays(daysNumber);
+        }
+        var isNecessary = bool.Parse(UserStateTracker.GetTemporaryData(chatId, "habit_necessary"));
+        habitsModel.Add(chatId, title, numberOfExecutions, days, isNecessary);
+        UserStateTracker.ClearTemporaryData(chatId);
+        UserStateTracker.SetUserState(chatId, null);
+        var keyboard = new InlineKeyboardMarkup(new[]
+        {
+          new[]
+          {
+            InlineKeyboardButton.WithCallbackData("На главную", "/start")
+          }
+        });
+        await HabitTracker.TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Привычка {title} успешно добавлена!", keyboard);
+
+        return;
       }
-      else if (state == "awaiting_habit_notify_start")
+      // TODO: перенести в регистрацию пользователя.
+      /*else if (state == "awaiting_habit_notify_start")
       {
         if (TimeOnly.TryParse(message, out TimeOnly result))
         {
@@ -710,7 +733,7 @@ namespace HabitTracker
         UserStateTracker.ClearTemporaryData(chatId);
         UserStateTracker.SetUserState(chatId, null);
         var keyboard = new InlineKeyboardMarkup(new[]
-       {
+        {
           new[]
           {
             InlineKeyboardButton.WithCallbackData("На главную", "/start")
@@ -719,7 +742,7 @@ namespace HabitTracker
         await HabitTracker.TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Привычка {title} успешно добавлена!", keyboard);
 
         return;
-      }
+      }*/
 
     }
 
