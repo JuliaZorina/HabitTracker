@@ -18,6 +18,7 @@ namespace HabitTracker.Data.Configurations
 
       builder.
         HasOne(h => h.User);
+
     }
   }
 }

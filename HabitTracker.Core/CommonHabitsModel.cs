@@ -1,4 +1,5 @@
 ﻿using HabitTracker.Data;
+using HabitTracker.Data.Models;
 using HabitTracker.Data.Repositories;
 
 namespace HabitTracker.Core
@@ -130,12 +131,37 @@ namespace HabitTracker.Core
     {
       var habitsRepository = new HabitsRepository(_dbContext);
       var usersRepository = new UsersRepository(_dbContext);
+      var notificationRepository = new NotificationRepository(_dbContext);
+      var habitNotificationRepository = new HabitNotificationRepository(_dbContext);
       UserEntity? foundUser = await usersRepository.GetByChatId(chatId);
       if (foundUser != null)
       {
         var expirationDate = days;
         var habit = new HabitEntity(Guid.NewGuid(), foundUser.Id, title, numberOfExecutions, expirationDate, isNecessary);
-        await habitsRepository.Add(habit);
+        
+        var userNotifications = await notificationRepository.GetByUserId(foundUser.Id);
+        if (userNotifications != null)
+        {
+          List<TimeOnly> notificationTime = new List<TimeOnly>();
+
+          var period = (userNotifications.TimeEnd - userNotifications.TimeStart) / numberOfExecutions;
+          for (int i = 0; i < numberOfExecutions; i++)
+          {
+            if (i == 0)
+            {
+              notificationTime.Add(userNotifications.TimeStart);
+            }
+            else
+            {
+              notificationTime.Add(notificationTime.LastOrDefault().AddMinutes(period.TotalMinutes));
+            }
+          }
+          var habitNotification = new HabitNotificationEntity(Guid.NewGuid(), habit.Id, userNotifications.Id, true, 
+            habit.NumberOfExecutions, notificationTime);
+          await habitsRepository.Add(habit);
+          Thread.Sleep(1000);
+          await habitNotificationRepository.Add(habitNotification);
+        }        
       }
       else
       {
@@ -152,13 +178,13 @@ namespace HabitTracker.Core
     /// <param name="status">Статус привычки.</param>
     /// <param name="progressDays">Количество дней прогресса привычки.</param>
     public async void Update(Guid id, string name, DateOnly? lastDay, HabitStatus status, long progressDays, 
-      DateTime? expirationDate, int numberOfExecutions)
+      DateTime? expirationDate, int numberOfExecutions, bool isSuspended)
     {
       var habitsRepository = new HabitsRepository(_dbContext);
       var result = await habitsRepository.GetById(id);
       if (result != null)
       {
-        var habit = new HabitEntity(id, name, lastDay, status, progressDays, expirationDate, numberOfExecutions);
+        var habit = new HabitEntity(id, name, lastDay, status, progressDays, expirationDate, numberOfExecutions, isSuspended);
         await habitsRepository.Update(habit);
       }      
     }
