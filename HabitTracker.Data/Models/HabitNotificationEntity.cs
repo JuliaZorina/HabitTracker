@@ -36,14 +36,16 @@ namespace HabitTracker.Data.Models
     /// <summary>
     /// Коллекция со временем отправки уведомлений.
     /// </summary>
-    public List<TimeOnly> NotificationTime { get; set; } = [];
-    public HabitNotificationEntity(Guid id, Guid habitId, Guid userNotificationsId, bool isSending, int countOfNotifications) 
+    public List<TimeOnly> NotificationTime { get; set; }
+    public HabitNotificationEntity(Guid id, Guid habitId, Guid userNotificationsId, bool isSending, int countOfNotifications, 
+      List<TimeOnly> notificationTime) 
     {
       this.Id = id;
       this.HabitId = habitId; 
       this.UserNotificationsId = userNotificationsId;  
       this.IsSending = isSending;
-      this.CountOfNotifications = countOfNotifications;      
+      this.CountOfNotifications = countOfNotifications;
+      this.NotificationTime = notificationTime; 
     }
   }
 }

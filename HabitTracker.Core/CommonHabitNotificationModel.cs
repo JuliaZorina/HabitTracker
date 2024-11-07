@@ -47,7 +47,7 @@ namespace HabitTracker.Core
     /// <param name="isSending">Статус активности данной привычки.</param>
     /// <param name="countOfNotifications">Количество уведомлений для привычки.</param>
     /// <exception cref="Exception"></exception>
-    public async void Add(long chatId, Guid habitId, bool isSending, int countOfNotifications)
+    public async void Add(long chatId, Guid habitId, bool isSending, int countOfNotifications, List<TimeOnly> notificationTime)
     {
       var habitsNotificationRepository = new HabitNotificationRepository(_dbContext);
       var notificationRepository = new NotificationRepository(_dbContext);
@@ -58,7 +58,8 @@ namespace HabitTracker.Core
         NotificationEntity? foundNotification = await notificationRepository.GetByUserId(foundUser.Id);
         if(foundNotification != null)
         {
-          var habitNotification = new HabitNotificationEntity(Guid.NewGuid(), habitId, foundNotification.Id, isSending, countOfNotifications);
+          var habitNotification = new HabitNotificationEntity(Guid.NewGuid(), habitId, foundNotification.Id, isSending, 
+            countOfNotifications, notificationTime);
           await habitsNotificationRepository.Add(habitNotification);
         }        
       }

@@ -69,11 +69,11 @@ namespace HabitTracker.Data.Repositories
       var notification = await _dbContext.NotificationSettings.FirstOrDefaultAsync(u => u.Id == habitNotification.UserNotificationsId)
         ?? throw new ArgumentNullException("Не найдены настройки уведомлений с указанным Id.");
       var newHabitNotification = new HabitNotificationEntity(habitNotification.Id, habitNotification.HabitId, habitNotification.UserNotificationsId,
-        habitNotification.IsSending, habitNotification.CountOfNotifications);
+        habitNotification.IsSending, habitNotification.CountOfNotifications, habitNotification.NotificationTime);
 
       notification.HabitNotifications.Add(newHabitNotification);
 
-      await _dbContext.AddAsync(habitNotification);
+      await _dbContext.AddAsync(newHabitNotification);
       await _dbContext.SaveChangesAsync();
     }
 
