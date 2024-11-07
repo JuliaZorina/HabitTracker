@@ -89,7 +89,9 @@ namespace HabitTracker.Core
     /// <param name="timeEnd">Время конца отправки уведомлений.</param>
     public async void Update(long chatId, TimeOnly timeStart, TimeOnly timeEnd)
     {
-      var notificationRepository = new NotificationRepository(_dbContext); var usersRepository = new UsersRepository(_dbContext);
+      var notificationRepository = new NotificationRepository(_dbContext); 
+      var habitNotificationRepository = new HabitNotificationRepository(_dbContext); 
+      var usersRepository = new UsersRepository(_dbContext);
       UserEntity? foundUser = await usersRepository.GetByChatId(chatId);
       if (foundUser != null)
       {
@@ -99,6 +101,31 @@ namespace HabitTracker.Core
           foundNotification.TimeStart = timeStart;
           foundNotification.TimeEnd = timeEnd;
           await notificationRepository.Update(foundNotification);
+          Thread.Sleep(1000);
+          var userHabitsSettings = await habitNotificationRepository.GetByNotificationSettingsId(foundNotification.Id);
+          if(userHabitsSettings != null)
+          {
+            foreach(var habitSettings  in userHabitsSettings)
+            {
+              habitSettings.NotificationTime.Clear();
+              List<TimeOnly> notificationTime = new List<TimeOnly>();
+
+              var period = (timeEnd - timeStart) / habitSettings.CountOfNotifications;
+              for (int i = 0; i < habitSettings.CountOfNotifications; i++)
+              {
+                if (i == 0)
+                {
+                  notificationTime.Add(timeStart);
+                }
+                else
+                {
+                  notificationTime.Add(notificationTime.LastOrDefault().AddMinutes(period.TotalMinutes));
+                }
+                habitSettings.NotificationTime = notificationTime;
+              }
+              await habitNotificationRepository.Update(habitSettings);
+            }
+          }
         }
       }
     }

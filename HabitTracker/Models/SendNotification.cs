@@ -28,7 +28,7 @@ namespace HabitTracker.Core
           var habitId = habitData.Key;
           var habitTime = habitData.Value;
 
-          if (TimeOnly.FromDateTime(ntpTime) == habitTime|| TimeOnly.FromDateTime(ntpTime).IsBetween(habitTime, habitTime.AddMinutes(1.5)))
+          if (TimeOnly.FromDateTime(ntpTime) == habitTime|| TimeOnly.FromDateTime(ntpTime).IsBetween(habitTime, habitTime.AddMinutes(1)))
           {
             var habitsModel = new CommonHabitsModel(dbContext);
             var userModel = new CommonUserModel(dbContext);
@@ -45,10 +45,16 @@ namespace HabitTracker.Core
                     new[]
                     {
                       InlineKeyboardButton.WithCallbackData("Отметить выполнение", $"/mark_as_done_{habitId}")
+                    },
+                    new[]
+                    {
+                      InlineKeyboardButton.WithCallbackData("Скрыть уведомление", "/delete_notification")
                     }
                 });
                 await HabitTracker.TelegramBotHandler.SendMessageAsync(botClient, foundUser.ChatId, 
                   $"Не забудьте выполнить привычку \"{foundHabit.Title}\"", keyboard);
+                Console.WriteLine($"Notification send to {foundUser.Name} sucesessfully. Habit: {foundHabit.Title}. Time: {habitTime}." +
+                  $"\nSent time: {ntpTime}");
               }
             }
           }

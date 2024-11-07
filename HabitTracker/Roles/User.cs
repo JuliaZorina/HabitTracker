@@ -172,6 +172,10 @@ namespace HabitTracker
           await Task.Delay(10);
           await ProcessMessageAsync(botClient, chatId, callbackData);
         }
+        else if (callbackData.Contains("/delete_notification"))
+        {
+          await botClient.DeleteMessageAsync(chatId, messageId);
+        }
         else if (callbackData.Contains("/get_allHabits"))
         {
           await GetHabits(botClient, chatId, messageId, callbackData);
@@ -390,10 +394,6 @@ namespace HabitTracker
             new[]
             {
               InlineKeyboardButton.WithCallbackData("Изменить частоту выполнения привычки за день", $"/edit_freq_{habitId}")
-            },
-            new[]
-            {
-               InlineKeyboardButton.WithCallbackData("Изменить период получения уведомлений", $"/edit_notify_interval_{habitId}")
             },
             new[]
             {
