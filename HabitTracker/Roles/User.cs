@@ -343,9 +343,7 @@ namespace HabitTracker
         },
       });
         await TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Выберите действие с привычкой {habit.Title}: ", keyboard, messageId);
-      }
-      
-      
+      } 
     }
 
     private static async Task GetHabbitsButtons(ITelegramBotClient botClient, long chatId, int messageId)
@@ -364,7 +362,6 @@ namespace HabitTracker
         {
           InlineKeyboardButton.WithCallbackData("Получить список выполненных сегодня привычек", "/get_doneHabits")
         },
-
         new[]
         {
           InlineKeyboardButton.WithCallbackData("Получить список приостановленных привычек", "/get_suspendedHabits")
@@ -531,7 +528,7 @@ namespace HabitTracker
     /// <param name="botClient">Клииент Telegram бота.</param>
     /// <param name="messageId">Уникальный идетификатор сообщения.</param>
     /// <param name="habitId">Уникальный идентификатор привычки.</param>
-    /// <param name="status">Статус привычкии.</param>
+    /// <param name="isSuspended">Статус активности привычкии.</param>
     /// <param name="chatId">Уникальный идентификатор чата.</param>
     /// <returns>Задача, представляющая асинхронную операцию.</returns>
     private async Task SuspendHabit(ITelegramBotClient botClient, int messageId, string habitId, bool isSuspended, long chatId)
@@ -800,49 +797,77 @@ namespace HabitTracker
           $"\nЕсли хотите сделать привычку бессрочной, нажмите кнопку 'Не устанавливать срок'",
           keyboard);
         UserStateTracker.SetUserState(chatId, "awaiting_habit_execution_day");
-
       }
       else if (state == "awaiting_habit_execution_day")
       {
         if (int.TryParse(message, out int value))
         {
-          UserStateTracker.SetTemporaryData(chatId, "habit_execution_day", message);
+          if (value <= 0)
+          {
+            await HabitTracker.TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Количество дней не может быть отрицательным или равным 0." +
+              $"\nВведите корректное значение.");
+          }
+          else 
+          {
+            UserStateTracker.SetTemporaryData(chatId, "habit_execution_day", message);
+            await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Введите число того, сколько раз за " +
+              "день вы хотите выполнять привычку:");
+            UserStateTracker.SetUserState(chatId, "awaiting_habit_frequency");
+          }          
+        }
+        else if (message.Contains("/endless"))
+        {
+          UserStateTracker.SetTemporaryData(chatId, "habit_execution_day", "null");
           await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Введите число того, сколько раз за " +
             "день вы хотите выполнять привычку:");
           UserStateTracker.SetUserState(chatId, "awaiting_habit_frequency");
         }
-        else if (message.Contains("/endless"))
+        else
         {
-          UserStateTracker.SetTemporaryData(chatId, "habit_frequency", "null");
-          await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Введите число того, сколько раз за " +
-            "день вы хотите выполнять привычку:");
-          UserStateTracker.SetUserState(chatId, "awaiting_habit_frequency");
+          await HabitTracker.TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Введено некорректное значение. Повторите попытку.");
         }
       }
       else if (state == "awaiting_habit_frequency")
       {
         var habitsModel = new CommonHabitsModel(_dbContext);
         var title = UserStateTracker.GetTemporaryData(chatId, "habit_title");
-        var numberOfExecutions = int.Parse(message);
-        DateTime? days = null;
-        if (int.TryParse(UserStateTracker.GetTemporaryData(chatId, "habit_execution_day"), out int daysNumber))
+        var numberOfExecutions = 0;
+        if (int.TryParse(message, out numberOfExecutions))
         {
-          days = DateTime.UtcNow.AddDays(daysNumber);
-        }
-        var isNecessary = bool.Parse(UserStateTracker.GetTemporaryData(chatId, "habit_necessary"));
-        habitsModel.Add(chatId, title, numberOfExecutions, days, isNecessary);
-        UserStateTracker.ClearTemporaryData(chatId);
-        UserStateTracker.SetUserState(chatId, null);
-        var keyboard = new InlineKeyboardMarkup(new[]
-        {
+          if (numberOfExecutions > 0)
+          {
+
+          DateTime? days = null;
+          if (int.TryParse(UserStateTracker.GetTemporaryData(chatId, "habit_execution_day"), out int daysNumber))
+          {
+            days = DateTime.UtcNow.AddDays(daysNumber);
+          }
+          var isNecessary = bool.Parse(UserStateTracker.GetTemporaryData(chatId, "habit_necessary"));
+          habitsModel.Add(chatId, title, numberOfExecutions, days, isNecessary);
+          UserStateTracker.ClearTemporaryData(chatId);
+          UserStateTracker.SetUserState(chatId, null);
+          var keyboard = new InlineKeyboardMarkup(new[]
+          {
           new[]
           {
             InlineKeyboardButton.WithCallbackData("На главную", "/start")
           }
         });
-        await HabitTracker.TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Привычка {title} успешно добавлена!", keyboard);
+          await HabitTracker.TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Привычка {title} успешно добавлена!", keyboard);
 
-        return;
+          return;
+          }
+          else
+          {
+            await HabitTracker.TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Количество повторений привычки за день не может " +
+              $"быть отрицательным или равно 0.\nПовторите попытку.");
+          }
+        }
+        else
+        {
+          await HabitTracker.TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Введено некорректное значение количества повторений привычки." +
+            $"\nПовторите попытку.");
+        }
       }
     }
 
@@ -980,8 +1005,7 @@ namespace HabitTracker
         await HabitTracker.TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Данные о привычке {message} успешно обновлены!", keyboard);
 
         return;
-      }
-      
+      }      
     }
     #endregion
 

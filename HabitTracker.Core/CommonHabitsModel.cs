@@ -136,6 +136,7 @@ namespace HabitTracker.Core
         var expirationDate = days;
         var habit = new HabitEntity(Guid.NewGuid(), foundUser.Id, title, numberOfExecutions, expirationDate, isNecessary);
         await habitsRepository.Add(habit);
+
       }
       else
       {
