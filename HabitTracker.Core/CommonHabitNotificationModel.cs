@@ -19,6 +19,16 @@ namespace HabitTracker.Core
     #region Методы
 
     /// <summary>
+    /// Получить список всех настроек уведомлений к привычкам пользователей.
+    /// </summary>
+    /// <returns></returns>
+    public async Task<List<HabitNotificationEntity>?> GetAll()
+    {
+      var habitNotificationsRepository = new HabitNotificationRepository(_dbContext);
+      return await habitNotificationsRepository.Get();
+    }
+
+    /// <summary>
     /// Получить настройки привычки по Id.
     /// </summary>
     /// <param name="habitId">уникальный идентификатор привычки.</param>

@@ -48,6 +48,12 @@ namespace HabitTracker
 
       var me = await _botClient.GetMeAsync();
       Console.WriteLine($"Start listening for @{me.Username}");
+
+      while (true)
+      {
+        await SendNotification.SendNotificationToUser(_dbContext, _botClient);
+        await Task.Delay(60000, cts.Token);
+      }
     }
 
     /// <summary>

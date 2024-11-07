@@ -18,6 +18,27 @@ namespace HabitTracker.Core
     #region Методы
 
     /// <summary>
+    /// Получить список всех настроек уведомлений пользователей.
+    /// </summary>
+    /// <returns></returns>
+    public async Task<List<NotificationEntity>?> GetAll()
+    {
+      var notificationsRepository = new NotificationRepository(_dbContext);
+      return await notificationsRepository.Get();
+    }
+
+    /// <summary>
+    /// Получить настройки уведомлений по id.
+    /// </summary>
+    /// <param name="id">Уникальный идентификатор уведомлений.</param>
+    /// <returns></returns>
+    public async Task<NotificationEntity?> GetById(Guid id)
+    {
+      var notificationRepository = new NotificationRepository(_dbContext);
+      return await notificationRepository.GetById(id);
+    }
+
+    /// <summary>
     /// Получить общие настройки уведомлений пользователя по Id пользователя.
     /// </summary>
     /// <param name="chatId">Уникальный идентификатор чата пользователя.</param>
