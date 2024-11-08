@@ -51,6 +51,7 @@ namespace HabitTracker
 
       while (true)
       {
+        ChangeHabitStatus.GetData(_dbContext);
         await SendNotification.SendNotificationToUser(_dbContext, _botClient);
         await Task.Delay(60000, cts.Token);
       }

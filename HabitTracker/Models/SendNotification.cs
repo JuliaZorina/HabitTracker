@@ -1,6 +1,4 @@
-﻿using System.Net.Sockets;
-using System.Net;
-using HabitTracker.Data;
+﻿using HabitTracker.Data;
 using Telegram.Bot;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -30,7 +28,7 @@ namespace HabitTracker.Core
     public static async Task SendNotificationToUser(HabitTrackerContext dbContext, ITelegramBotClient botClient)
     {
       GetData(dbContext);
-      DateTime ntpTime = GetNetworkTime("time.google.com");
+      DateTime ntpTime = GetTime.GetNetworkTime("time.google.com");
       foreach (var userHabitNotification in usersHabitsNotifications)
       {
         var notificationsSettingsId = userHabitNotification.Key;
@@ -39,8 +37,9 @@ namespace HabitTracker.Core
         {
           var habitId = habitData.Key;
           var habitTime = habitData.Value;
+          var currentTime = TimeOnly.FromDateTime(ntpTime);
 
-          if (TimeOnly.FromDateTime(ntpTime) == habitTime|| TimeOnly.FromDateTime(ntpTime).IsBetween(habitTime, habitTime.AddMinutes(1)))
+          if (currentTime == habitTime || currentTime.IsBetween(habitTime, habitTime.AddMinutes(1)))
           {
             var habitsModel = new CommonHabitsModel(dbContext);
             var userModel = new CommonUserModel(dbContext);
@@ -108,47 +107,6 @@ namespace HabitTracker.Core
           }
         }
       }
-    }
-
-    /// <summary>
-    /// Получить актуальное время для конкретного пользователя.
-    /// </summary>
-    /// <param name="ntpServer"></param>
-    /// <returns></returns>
-    private static DateTime GetNetworkTime(string ntpServer)
-    {
-      const int ntpDataLength = 48;
-      byte[] ntpData = new byte[ntpDataLength];
-      ntpData[0] = 0x1B;
-
-      IPEndPoint ipEndPoint = new IPEndPoint(Dns.GetHostAddresses(ntpServer)[0], 123);
-      using (Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp))
-      {
-        socket.Connect(ipEndPoint);
-        socket.Send(ntpData);
-        socket.Receive(ntpData);
-        socket.Close();
-      }
-
-      ulong intPart = BitConverter.ToUInt32(ntpData, 40);
-      ulong fractPart = BitConverter.ToUInt32(ntpData, 44);
-
-      intPart = SwapEndianness(intPart);
-      fractPart = SwapEndianness(fractPart);
-
-      ulong milliseconds = (intPart * 1000) + ((fractPart * 1000) / 0x100000000L);
-      DateTime networkDateTime = new DateTime(1900, 1, 1).AddMilliseconds((long)milliseconds);
-
-      return networkDateTime.ToLocalTime();
-    }
-
-    private static uint SwapEndianness(ulong x)
-    {
-      return (uint)(((x & 0x000000FF) << 24) +
-                    ((x & 0x0000FF00) << 8) +
-                    ((x & 0x00FF0000) >> 8) +
-                    ((x & 0xFF000000) >> 24));
-    }
+    }    
   }
-
 }
