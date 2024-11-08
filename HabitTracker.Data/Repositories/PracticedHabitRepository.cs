@@ -28,13 +28,27 @@ namespace HabitTracker.Data.Repositories
     }
 
     /// <summary>
-    /// Получить привычку по ее уникальному идентификатору.
+    /// Получить записи о выполнении привычки по уникальному идентификатору привычки и дате выполнения.
+    /// </summary>
+    /// <returns>Асинхронно возвращает список данных о выполнении привычки, найденных по ее уникальному идентификатору.</returns>
+    public async Task<List<PracticedHabitEntity>?> GetByDateAndHabitId(Guid id, DateOnly date)
+    {
+      var practicedHabits = await _dbContext.PracticedHabits
+        .AsNoTracking()
+        .Where(ph => ph.HabitId == id)
+        .Where(ph => DateOnly.FromDateTime(ph.LastExecutionDate) == date)
+        .ToListAsync();
+      return practicedHabits;
+    }
+    /// <summary>
+    /// Получить запись о выполнении привычки по уникальному идентификатору привычки.
     /// </summary>
     /// <returns>Асинхронно возвращает список данных о выполнении привычки, найденных по ее уникальному идентификатору.</returns>
     public async Task<List<PracticedHabitEntity>?> GetById(Guid id)
     {
       return await _dbContext.PracticedHabits
-        .AsNoTracking().Where(ph => ph.HabitId == id)
+        .AsNoTracking()
+        .Where(ph => ph.HabitId == id)
         .ToListAsync();
     }
 

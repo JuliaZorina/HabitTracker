@@ -17,7 +17,6 @@ namespace HabitTracker
     static async Task Main(string[] args)
     {
       Console.WriteLine("Отладка: Программа запущена");
-
       try
       {
         var config = BotConfigManager.ConfigApp;
@@ -38,13 +37,13 @@ namespace HabitTracker
       {
         Console.WriteLine($"Отладка: Произошла ошибка - {ex.Message}");
         Debug.WriteLine($"Отладка: Подробности исключения - {ex}");
-        await Main(args);
+        //startBot.Start(args);
       }
-      
-      Console.WriteLine("Отладка: Программа завершена");
 
-      Console.WriteLine("Нажмите любую клавишу для выхода...");
+      Console.WriteLine("Отладка: Программа завершена");
+      Console.WriteLine("Нажмите любую клавишу...");
       Console.ReadKey();
+
     }
   }
 }

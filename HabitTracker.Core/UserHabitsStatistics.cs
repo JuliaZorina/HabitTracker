@@ -76,7 +76,7 @@ namespace HabitTracker.Core
       {
         series.DataLabels.IsAutoText = false;
       }
-      chart.Title.Text = $"Статистика по прогрессу ваших привычек на {DateOnly.FromDateTime(DateTime.UtcNow)}";
+      chart.Title.Text = $"Статистика по прогрессу ваших привычек на {DateOnly.FromDateTime(GetTime.GetNetworkTime("time.google.com"))}";
       chart.Legend.Position = LegendPositionType.Bottom;
 
       ImageOrPrintOptions imageOrPrintOptions = new ImageOrPrintOptions();

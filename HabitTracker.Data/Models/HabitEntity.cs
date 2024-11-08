@@ -1,4 +1,6 @@
-﻿namespace HabitTracker.Data
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace HabitTracker.Data
 {
   /// <summary>
   /// Сущность привычки.
@@ -44,6 +46,7 @@
     /// <summary>
     /// Срок выполнения привычки.
     /// </summary>
+    [Column(TypeName = "timestamp")]
     public DateTime? ExpirationDate {  get; set; }
     /// <summary>
     /// Количество раз выполнения привычки за день.
