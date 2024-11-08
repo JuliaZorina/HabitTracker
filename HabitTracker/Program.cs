@@ -38,23 +38,9 @@ namespace HabitTracker
       {
         Console.WriteLine($"Отладка: Произошла ошибка - {ex.Message}");
         Debug.WriteLine($"Отладка: Подробности исключения - {ex}");
+        await Main(args);
       }
-      finally
-      {
-        var config = BotConfigManager.ConfigApp;
-
-        Console.WriteLine("Конфигурация успешно загружена");
-        Console.WriteLine($"Токен бота: {config.BotToken}");
-        var dbContextFactory = new DbContextFactory();
-        var dbContext = dbContextFactory.CreateDbContext(args);
-
-        await dbContext.Database.MigrateAsync();
-
-        var botHandler = new TelegramBotHandler(config.BotToken, dbContext);
-        await botHandler.StartBotAsync();
-
-        await Task.Delay(-1);
-      }
+      
       Console.WriteLine("Отладка: Программа завершена");
 
       Console.WriteLine("Нажмите любую клавишу для выхода...");

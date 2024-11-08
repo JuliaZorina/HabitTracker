@@ -1,20 +1,32 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Sockets;
+﻿using System.Net.Sockets;
 using System.Net;
-using System.Text;
 using HabitTracker.Data;
 using Telegram.Bot;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace HabitTracker.Core
 {
+  /// <summary>
+  /// Обработка методов для отправки уведомлений пользователю.
+  /// </summary>
   public static class SendNotification
   {
+    /// <summary>
+    /// Словарь для хранения уникального идентификатора настроек уведомлений и соответствующего ему уникального идентификатора пользователя.
+    /// </summary>
     private static Dictionary<Guid, Guid> userNotificationsSettings = new Dictionary<Guid, Guid>();
+    /// <summary>
+    /// Словарь для хранения уникального идентификатора настроек уведомлений и соответсвующего ему словаря из пары значений 
+    /// уникального идентификатора привычки и времени, в которое должно прийти уведомление об этой привычке.
+    /// </summary>
     private static Dictionary<Guid, Dictionary<Guid, TimeOnly>> usersHabitsNotifications = new Dictionary<Guid, Dictionary<Guid, TimeOnly>>();
 
+    /// <summary>
+    /// Отправить пользователю уведомление с напоминанием о выполнении привычки.
+    /// </summary>
+    /// <param name="dbContext">Контекст базы данных.</param>
+    /// <param name="botClient">Клиент Telegram-бота.</param>
+    /// <returns>Задача, представляющая асинхронную операцию.</returns>
     public static async Task SendNotificationToUser(HabitTrackerContext dbContext, ITelegramBotClient botClient)
     {
       GetData(dbContext);
@@ -62,6 +74,10 @@ namespace HabitTracker.Core
       }
     }
 
+    /// <summary>
+    /// Получить данные о времени отправки уведомлений пользователям.
+    /// </summary>
+    /// <param name="dbContext">Контекст базы данных.</param>
     private static async void GetData(HabitTrackerContext dbContext)
     {
       var notificationsModel = new CommonNotificationModel(dbContext);
@@ -94,6 +110,11 @@ namespace HabitTracker.Core
       }
     }
 
+    /// <summary>
+    /// Получить актуальное время для конкретного пользователя.
+    /// </summary>
+    /// <param name="ntpServer"></param>
+    /// <returns></returns>
     private static DateTime GetNetworkTime(string ntpServer)
     {
       const int ntpDataLength = 48;
