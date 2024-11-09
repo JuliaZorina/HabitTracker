@@ -14,7 +14,9 @@ namespace HabitTracker.Core
     /// <summary>
     /// Контекст базы данных.
     /// </summary>
-    private HabitTrackerContext _dbContext;
+    private readonly DbContextFactory _dbContextFactory;
+    private readonly string[] _args;
+
 
     #endregion
 
@@ -28,17 +30,20 @@ namespace HabitTracker.Core
     /// <returns></returns>
     public async Task<List<PracticedHabitEntity>?> GetByDateAndHabitId(Guid id, DateOnly date)
     {
-      var habitsRepository = new HabitsRepository(_dbContext);
-      var practicedHabitRepository = new PracticedHabitRepository(_dbContext);
-      HabitEntity? foundHabit = await habitsRepository.GetById(id);
-      if (foundHabit != null)
+      await using (var dbContext = _dbContextFactory.CreateDbContext(this._args))
       {
-        var practicedHabits = await practicedHabitRepository.GetByDateAndHabitId(foundHabit.Id, date);
-        return practicedHabits;
-      }
-      else
-      {
-        throw new Exception("Привычка с таким id не найдена в базе данных выполняемых привычек");
+        var habitsRepository = new HabitsRepository(dbContext);
+        var practicedHabitRepository = new PracticedHabitRepository(dbContext);
+        HabitEntity? foundHabit = await habitsRepository.GetById(id);
+        if (foundHabit != null)
+        {
+          var practicedHabits = await practicedHabitRepository.GetByDateAndHabitId(foundHabit.Id, date);
+          return practicedHabits;
+        }
+        else
+        {
+          throw new Exception("Привычка с таким id не найдена в базе данных выполняемых привычек");
+        }
       }
     }
 
@@ -51,17 +56,20 @@ namespace HabitTracker.Core
     /// <exception cref="ArgumentNullException">Выбрасывает исключение, если привычка с указанным Id не найдена в базе данных.</exception>
     public async void Add(Guid habitId, DateTime dateTime)
     {
-      var habitsRepository = new HabitsRepository(_dbContext);
-      var practicedHabitsRepository = new PracticedHabitRepository(_dbContext);
-      HabitEntity? foundHabit = await habitsRepository.GetById(habitId);
-      if (foundHabit != null)
+      await using (var dbContext = _dbContextFactory.CreateDbContext(this._args))
       {
-        var practicedHabit = new PracticedHabitEntity(Guid.NewGuid(), foundHabit.Id, dateTime);
-        await practicedHabitsRepository.Add(practicedHabit);
-      }
-      else
-      {
-        throw new ArgumentNullException("Привычка с таким Id не существует в базе данных");
+        var habitsRepository = new HabitsRepository(dbContext);
+        var practicedHabitsRepository = new PracticedHabitRepository(dbContext);
+        HabitEntity? foundHabit = await habitsRepository.GetById(habitId);
+        if (foundHabit != null)
+        {
+          var practicedHabit = new PracticedHabitEntity(Guid.NewGuid(), foundHabit.Id, dateTime);
+          await practicedHabitsRepository.Add(practicedHabit);
+        }
+        else
+        {
+          throw new ArgumentNullException("Привычка с таким Id не существует в базе данных");
+        }
       }
     }
 
@@ -71,20 +79,24 @@ namespace HabitTracker.Core
     /// <param name="id">Уникальный идентификатор привычки.</param>
     public async void Delete(Guid id)
     {
-      var practicedHabitsRepository = new PracticedHabitRepository(_dbContext);
-      var result = await practicedHabitsRepository.GetById(id);
-      if (result != null)
+      await using (var dbContext = _dbContextFactory.CreateDbContext(this._args))
       {
-        await practicedHabitsRepository.Delete(id);
+        var practicedHabitsRepository = new PracticedHabitRepository(dbContext);
+        var result = await practicedHabitsRepository.GetById(id);
+        if (result != null)
+        {
+          await practicedHabitsRepository.Delete(id);
+        }
       }
     }
 
     #endregion
 
     #region Конструкторы
-    public CommonPracticedHabitModel(HabitTrackerContext dbContext)
+    public CommonPracticedHabitModel(DbContextFactory dbContextFactory, string[] args)
     {
-      _dbContext = dbContext;
+      this._dbContextFactory = dbContextFactory;
+      this._args = args;
     }
     #endregion
   }

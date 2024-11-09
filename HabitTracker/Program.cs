@@ -1,4 +1,5 @@
-﻿using HabitTracker.Data.Data;
+﻿using HabitTracker.Core;
+using HabitTracker.Data.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 
@@ -23,12 +24,12 @@ namespace HabitTracker
 
         Console.WriteLine("Конфигурация успешно загружена");
         Console.WriteLine($"Токен бота: {config.BotToken}");
+
         var dbContextFactory = new DbContextFactory();
         var dbContext = dbContextFactory.CreateDbContext(args);
-
         await dbContext.Database.MigrateAsync();
 
-        var botHandler = new TelegramBotHandler(config.BotToken, dbContext);
+        var botHandler = new TelegramBotHandler(config.BotToken, dbContextFactory, args);
         await botHandler.StartBotAsync();
 
         await Task.Delay(-1);
@@ -37,7 +38,6 @@ namespace HabitTracker
       {
         Console.WriteLine($"Отладка: Произошла ошибка - {ex.Message}");
         Debug.WriteLine($"Отладка: Подробности исключения - {ex}");
-        //startBot.Start(args);
       }
 
       Console.WriteLine("Отладка: Программа завершена");

@@ -1,6 +1,8 @@
 ﻿using HabitTracker.Core;
 using HabitTracker.Data;
 using HabitTracker.Models;
+using Microsoft.EntityFrameworkCore;
+using System.Diagnostics;
 using System.Threading;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
@@ -22,8 +24,12 @@ namespace HabitTracker
     /// Клиент Telegram бота.
     /// </summary>
     private readonly ITelegramBotClient _botClient;
-    
-    private HabitTrackerContext _dbContext;
+
+    //private HabitTrackerContext _dbContext;
+
+    private readonly DbContextFactory _dbContextFactory;
+    private readonly string[] _args;
+
     #endregion
 
     #region Методы
@@ -52,9 +58,8 @@ namespace HabitTracker
       Thread.Sleep(1000);
       while (true)
       {
-        ChangeHabitStatus.GetData(_dbContext);
-        Thread.Sleep(10000);
-        await SendNotification.SendNotificationToUser(_dbContext, _botClient);
+        ChangeHabitStatus.GetData(_dbContextFactory, this._args);
+        await SendNotification.SendNotificationToUser(_dbContextFactory, this._args, _botClient);
         await Task.Delay(60000, cts.Token);
       }
     }
@@ -108,18 +113,20 @@ namespace HabitTracker
     {
       var chatId = callbackQuery.From.Id;
       var userName = callbackQuery.From.Username;
-      var userModel = new CommonUserModel(_dbContext);
-      var userData = await userModel.GetByChatId(chatId);
-
-      if (userData != null)
+      await using (var dbContext = this._dbContextFactory.CreateDbContext(this._args))
       {
-        var user = new User(userName, chatId, _dbContext);
-        await user.ProcessCallbackAsync(_botClient, chatId, callbackQuery.Data, callbackQuery.Message.MessageId);
+        var userModel = new CommonUserModel(_dbContextFactory, _args);
+        var userData = await userModel.GetByChatId(chatId);
+        if (userData != null)
+        {
+          var user = new User(userName, chatId, this._dbContextFactory, this._args);
+          await user.ProcessCallbackAsync(_botClient, chatId, callbackQuery.Data, callbackQuery.Message.MessageId);
+        }
+        else
+        {
+          await _botClient.SendTextMessageAsync(chatId, "Ошибка: Данные пользователя не найдены!");
+        }
       }
-      else
-      {
-        await _botClient.SendTextMessageAsync(chatId, "Ошибка: Данные пользователя не найдены!");
-      }      
     }
 
     /// <summary>
@@ -133,7 +140,7 @@ namespace HabitTracker
       var chatId = message.Chat.Id;
       var messageText = message.Text;
       var userName = message.From.Username;
-      var userModel = new CommonUserModel(_dbContext);
+      var userModel = new CommonUserModel(_dbContextFactory, _args);
       var userData = await userModel.GetByChatId(chatId);
 
       if (userData == null)
@@ -142,7 +149,7 @@ namespace HabitTracker
         await _botClient.SendTextMessageAsync(chatId, $"{userName}, добро пожаловать!");
         UserStateTracker.SetUserState(chatId, "awaiting_notification_settings");
       }
-      var user = new User(userName, chatId, _dbContext);
+      var user = new User(userName, chatId, this._dbContextFactory, this._args);
       await user.ProcessMessageAsync(_botClient, chatId, messageText);
     }
 
@@ -163,21 +170,28 @@ namespace HabitTracker
       }
       else if (messageId.HasValue)
       {
-        await botClient.EditMessageTextAsync(chatId, messageId.Value, message, replyMarkup: inlineKeyboardMarkup);
+        try
+        {
+          await botClient.EditMessageTextAsync(chatId, messageId.Value, message, replyMarkup: inlineKeyboardMarkup);
+        }
+        catch (Exception ex)
+        {
+          Console.WriteLine($"Отладка: Произошла ошибка - {ex.Message}");
+        }
       }
       else
       {
         await botClient.SendTextMessageAsync(chatId, message, replyMarkup: inlineKeyboardMarkup);
       }
     }
-
     #endregion
 
     #region Конструкторы
-    public TelegramBotHandler(string botToken, HabitTrackerContext dbContext) 
-    { 
+    public TelegramBotHandler(string botToken, DbContextFactory dbContextFactory, string[] args)
+    {
       this._botClient = new TelegramBotClient(botToken);
-      this._dbContext = dbContext;
+      this._dbContextFactory = dbContextFactory;
+      this._args = args;
     }
 
     #endregion

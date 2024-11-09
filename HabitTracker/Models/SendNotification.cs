@@ -1,4 +1,5 @@
 ﻿using HabitTracker.Data;
+using Microsoft.EntityFrameworkCore.Internal;
 using Telegram.Bot;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -25,34 +26,38 @@ namespace HabitTracker.Core
     /// <param name="dbContext">Контекст базы данных.</param>
     /// <param name="botClient">Клиент Telegram-бота.</param>
     /// <returns>Задача, представляющая асинхронную операцию.</returns>
-    public static async Task SendNotificationToUser(HabitTrackerContext dbContext, ITelegramBotClient botClient)
+    public static async Task SendNotificationToUser(DbContextFactory dbContextFactory, string[] args, ITelegramBotClient botClient)
     {
-      GetData(dbContext);
-      DateTime ntpTime = GetTime.GetNetworkTime("time.google.com");
-      foreach (var userHabitNotification in usersHabitsNotifications)
+      await using (var dbContext = dbContextFactory.CreateDbContext(args))
       {
-        var notificationsSettingsId = userHabitNotification.Key;
-        Dictionary<Guid, TimeOnly> habitAndTime = userHabitNotification.Value;
-        foreach(var habitData in habitAndTime)
+        GetData(dbContext, dbContextFactory, args);
+        DateTime ntpTime = GetTime.GetNetworkTime("time.google.com");
+        foreach (var userHabitNotification in usersHabitsNotifications)
         {
-          var habitId = habitData.Key;
-          var habitTime = habitData.Value;
-          var currentTime = TimeOnly.FromDateTime(ntpTime);
-
-          if (currentTime == habitTime || currentTime.IsBetween(habitTime, habitTime.AddMinutes(1)))
+          var notificationsSettingsId = userHabitNotification.Key;
+          Dictionary<Guid, TimeOnly> habitAndTime = userHabitNotification.Value;
+          foreach (var habitData in habitAndTime)
           {
-            var habitsModel = new CommonHabitsModel(dbContext);
-            var userModel = new CommonUserModel(dbContext);
-            var notificationsModel = new CommonNotificationModel(dbContext);
-            var foundNotification = await notificationsModel.GetById(notificationsSettingsId);
-            if (foundNotification != null) 
+            var habitId = habitData.Key;
+            var habitTime = habitData.Value;
+            var currentTime = TimeOnly.FromDateTime(ntpTime);
+
+            if (currentTime == habitTime || currentTime.IsBetween(habitTime, habitTime.AddMinutes(1)))
             {
-              var foundUser = await userModel.GetById(foundNotification.UserId);
-              if (foundUser != null)
+              var habitsModel = new CommonHabitsModel(dbContextFactory, args);
+              var userModel = new CommonUserModel(dbContextFactory, args);
+              var notificationsModel = new CommonNotificationModel(dbContextFactory, args);
+              var foundNotification = await notificationsModel.GetById(notificationsSettingsId);
+              if (foundNotification != null)
               {
-                var foundHabit = await habitsModel.GetById(foundUser.ChatId, habitId);
-                var keyboard = new InlineKeyboardMarkup(new[]
+                var foundUser = await userModel.GetById(foundNotification.UserId);
+                if (foundUser != null)
                 {
+                  var foundHabit = await habitsModel.GetById(foundUser.ChatId, habitId);
+                  if (foundHabit != null && foundHabit.Status != HabitStatus.Done)
+                  {
+                    var keyboard = new InlineKeyboardMarkup(new[]
+                  {
                     new[]
                     {
                       InlineKeyboardButton.WithCallbackData("Отметить выполнение", $"/mark_as_done_{habitId}")
@@ -62,14 +67,16 @@ namespace HabitTracker.Core
                       InlineKeyboardButton.WithCallbackData("Скрыть уведомление", "/delete_notification")
                     }
                 });
-                await HabitTracker.TelegramBotHandler.SendMessageAsync(botClient, foundUser.ChatId, 
-                  $"Не забудьте выполнить привычку \"{foundHabit.Title}\"", keyboard);
-                Console.WriteLine($"Notification send to {foundUser.Name} sucesessfully. Habit: {foundHabit.Title}. Time: {habitTime}." +
-                  $"\nSent time: {ntpTime}");
+                    await HabitTracker.TelegramBotHandler.SendMessageAsync(botClient, foundUser.ChatId,
+                      $"Не забудьте выполнить привычку \"{foundHabit.Title}\"", keyboard);
+                    Console.WriteLine($"Notification send to {foundUser.Name} sucesessfully. Habit: {foundHabit.Title}. Time: {habitTime}." +
+                      $"\nSent time: {ntpTime}");
+                  }                  
+                }
               }
             }
           }
-        }        
+        }            
       }
     }
 
@@ -77,10 +84,10 @@ namespace HabitTracker.Core
     /// Получить данные о времени отправки уведомлений пользователям.
     /// </summary>
     /// <param name="dbContext">Контекст базы данных.</param>
-    private static async void GetData(HabitTrackerContext dbContext)
+    private static async void GetData(HabitTrackerContext dbContext, DbContextFactory dbContextFactory, string[] args)
     {
-      var notificationsModel = new CommonNotificationModel(dbContext);
-      var habitNotificationsModel = new CommonHabitNotificationModel(dbContext);
+      var notificationsModel = new CommonNotificationModel(dbContextFactory, args);
+      var habitNotificationsModel = new CommonHabitNotificationModel(dbContextFactory, args);
       var allNotifications = await notificationsModel.GetAll();
       if (allNotifications != null)
       {

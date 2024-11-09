@@ -78,7 +78,7 @@ namespace HabitTracker.Data
       this.Id = id;
       this.UserId = userId;
       this.Title = name;
-      this.CreationDate = DateOnly.FromDateTime(DateTime.UtcNow);
+      this.CreationDate = DateOnly.FromDateTime(DateTime.Now);
       this.LastExecutionDate = null;
       this.Status = HabitStatus.Undone;
       this.ProgressDays = 0;

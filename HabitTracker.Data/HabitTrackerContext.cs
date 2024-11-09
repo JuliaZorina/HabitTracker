@@ -13,7 +13,7 @@ namespace HabitTracker.Data
     /// <summary>
     /// Поток для записи логов в файл.
     /// </summary>
-    private StreamWriter logStream = new StreamWriter("mylog.txt", true);
+    private StreamWriter? _logStream;
     /// <summary>
     /// Коллекция пользователей в базе данных.
     /// </summary>
@@ -54,7 +54,21 @@ namespace HabitTracker.Data
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
       optionsBuilder.UseNpgsql(BotConfigManager.ConfigApp.DatabaseConnectionString);
-      optionsBuilder.LogTo(logStream.WriteLine, new[] { DbLoggerCategory.Database.Command.Name });
+      /*try
+      {
+        if (_logStream == null)
+        {
+          var fileStream = new FileStream($"mylog_{DateTime.Now:yyyyMMdd_HHmmss}.txt", FileMode.Append, FileAccess.Write, FileShare.Read);
+          _logStream = new StreamWriter(fileStream) { AutoFlush = true };
+        }
+        // Логируем команды базы данных
+        optionsBuilder.LogTo(_logStream.WriteLine, new[] { DbLoggerCategory.Database.Command.Name });
+      }
+      catch (Exception ex)
+      {
+        Console.WriteLine($"Ошибка записи в лог: {ex.Message}");
+      }*/
+      
     }
 
     /// <summary>
@@ -63,8 +77,12 @@ namespace HabitTracker.Data
     /// <returns>Задача, представляющая асинхронную операцию.</returns>
     public override async ValueTask DisposeAsync()
     {
+      if (_logStream != null)
+      {
+        await _logStream.DisposeAsync(); // Асинхронное освобождение ресурсов StreamWriter
+        _logStream = null; // Обнуляем ссылку
+      }
       await base.DisposeAsync();
-      await logStream.DisposeAsync();
     }
 
     #region Конструторы

@@ -1,6 +1,7 @@
 ﻿using HabitTracker.Data.Models;
 using HabitTracker.Data.Repositories;
 using HabitTracker.Data;
+using Microsoft.EntityFrameworkCore.Internal;
 
 namespace HabitTracker.Core
 {
@@ -11,7 +12,9 @@ namespace HabitTracker.Core
     /// <summary>
     /// Контекст базы данных
     /// </summary>
-    private readonly HabitTrackerContext _dbContext;
+    private readonly DbContextFactory _dbContextFactory;
+    private readonly string[] _args;
+
 
     #endregion
 
@@ -23,8 +26,11 @@ namespace HabitTracker.Core
     /// <returns></returns>
     public async Task<List<NotificationEntity>?> GetAll()
     {
-      var notificationsRepository = new NotificationRepository(_dbContext);
-      return await notificationsRepository.Get();
+      await using (var dbContext = _dbContextFactory.CreateDbContext(this._args))
+      {
+        var notificationsRepository = new NotificationRepository(dbContext);
+        return await notificationsRepository.Get();
+      }
     }
 
     /// <summary>
@@ -34,8 +40,11 @@ namespace HabitTracker.Core
     /// <returns></returns>
     public async Task<NotificationEntity?> GetById(Guid id)
     {
-      var notificationRepository = new NotificationRepository(_dbContext);
-      return await notificationRepository.GetById(id);
+      await using (var dbContext = _dbContextFactory.CreateDbContext(this._args))
+      {
+        var notificationRepository = new NotificationRepository(dbContext);
+        return await notificationRepository.GetById(id);
+      }
     }
 
     /// <summary>
@@ -45,16 +54,19 @@ namespace HabitTracker.Core
     /// <returns></returns>
     public async Task<NotificationEntity?> GetByUserChatId(long chatId)
     {
-      var notificationRepository = new NotificationRepository(_dbContext);
-      var usersRepository = new UsersRepository(_dbContext);
-      UserEntity? foundUser = await usersRepository.GetByChatId(chatId);
-      if (foundUser != null)
+      await using (var dbContext = _dbContextFactory.CreateDbContext(this._args))
       {
-        return await notificationRepository.GetByUserId(foundUser.Id);
-      }
-      else
-      {
-        throw new Exception("Пользователь с таким chatId не найден в базе данных");
+        var notificationRepository = new NotificationRepository(dbContext);
+        var usersRepository = new UsersRepository(dbContext);
+        UserEntity? foundUser = await usersRepository.GetByChatId(chatId);
+        if (foundUser != null)
+        {
+          return await notificationRepository.GetByUserId(foundUser.Id);
+        }
+        else
+        {
+          throw new Exception("Пользователь с таким chatId не найден в базе данных");
+        }
       }
     }
 
@@ -67,17 +79,20 @@ namespace HabitTracker.Core
     /// <exception cref="Exception"></exception>
     public async void Add(long chatId, TimeOnly timeStart, TimeOnly timeEnd)
     {
-      var notificationRepository = new NotificationRepository(_dbContext);
-      var usersRepository = new UsersRepository(_dbContext);
-      UserEntity? foundUser = await usersRepository.GetByChatId(chatId);
-      if (foundUser != null)
+      await using (var dbContext = _dbContextFactory.CreateDbContext(this._args))
       {
-        var newNotification = new NotificationEntity(Guid.NewGuid(), foundUser.Id, timeStart, timeEnd);
-        await notificationRepository.Add(newNotification);
-      }
-      else
-      {
-        throw new Exception("Пользователь с таким chatId не существует в базе данных");
+        var notificationRepository = new NotificationRepository(dbContext);
+        var usersRepository = new UsersRepository(dbContext);
+        UserEntity? foundUser = await usersRepository.GetByChatId(chatId);
+        if (foundUser != null)
+        {
+          var newNotification = new NotificationEntity(Guid.NewGuid(), foundUser.Id, timeStart, timeEnd);
+          await notificationRepository.Add(newNotification);
+        }
+        else
+        {
+          throw new Exception("Пользователь с таким chatId не существует в базе данных");
+        }
       }
     }
 
@@ -89,41 +104,44 @@ namespace HabitTracker.Core
     /// <param name="timeEnd">Время конца отправки уведомлений.</param>
     public async void Update(long chatId, TimeOnly timeStart, TimeOnly timeEnd)
     {
-      var notificationRepository = new NotificationRepository(_dbContext); 
-      var habitNotificationRepository = new HabitNotificationRepository(_dbContext); 
-      var usersRepository = new UsersRepository(_dbContext);
-      UserEntity? foundUser = await usersRepository.GetByChatId(chatId);
-      if (foundUser != null)
+      await using (var dbContext = _dbContextFactory.CreateDbContext(this._args))
       {
-        var foundNotification = await notificationRepository.GetByUserId(foundUser.Id);
-        if (foundNotification != null)
+        var notificationRepository = new NotificationRepository(dbContext); 
+      var habitNotificationRepository = new HabitNotificationRepository(dbContext); 
+      var usersRepository = new UsersRepository(dbContext);
+      UserEntity? foundUser = await usersRepository.GetByChatId(chatId);
+        if (foundUser != null)
         {
-          foundNotification.TimeStart = timeStart;
-          foundNotification.TimeEnd = timeEnd;
-          await notificationRepository.Update(foundNotification);
-          Thread.Sleep(1000);
-          var userHabitsSettings = await habitNotificationRepository.GetByNotificationSettingsId(foundNotification.Id);
-          if(userHabitsSettings != null)
+          var foundNotification = await notificationRepository.GetByUserId(foundUser.Id);
+          if (foundNotification != null)
           {
-            foreach(var habitSettings  in userHabitsSettings)
+            foundNotification.TimeStart = timeStart;
+            foundNotification.TimeEnd = timeEnd;
+            await notificationRepository.Update(foundNotification);
+            Thread.Sleep(1000);
+            var userHabitsSettings = await habitNotificationRepository.GetByNotificationSettingsId(foundNotification.Id);
+            if (userHabitsSettings != null)
             {
-              habitSettings.NotificationTime.Clear();
-              List<TimeOnly> notificationTime = new List<TimeOnly>();
-
-              var period = (timeEnd - timeStart) / habitSettings.CountOfNotifications;
-              for (int i = 0; i < habitSettings.CountOfNotifications; i++)
+              foreach (var habitSettings in userHabitsSettings)
               {
-                if (i == 0)
+                habitSettings.NotificationTime.Clear();
+                List<TimeOnly> notificationTime = new List<TimeOnly>();
+
+                var period = (timeEnd - timeStart) / habitSettings.CountOfNotifications;
+                for (int i = 0; i < habitSettings.CountOfNotifications; i++)
                 {
-                  notificationTime.Add(timeStart);
+                  if (i == 0)
+                  {
+                    notificationTime.Add(timeStart);
+                  }
+                  else
+                  {
+                    notificationTime.Add(notificationTime.LastOrDefault().AddMinutes(period.TotalMinutes));
+                  }
+                  habitSettings.NotificationTime = notificationTime;
                 }
-                else
-                {
-                  notificationTime.Add(notificationTime.LastOrDefault().AddMinutes(period.TotalMinutes));
-                }
-                habitSettings.NotificationTime = notificationTime;
+                await habitNotificationRepository.Update(habitSettings);
               }
-              await habitNotificationRepository.Update(habitSettings);
             }
           }
         }
@@ -133,9 +151,10 @@ namespace HabitTracker.Core
     #endregion
 
     #region Конструкторы
-    public CommonNotificationModel(HabitTrackerContext dbContext)
+    public CommonNotificationModel(DbContextFactory dbContextFactory, string[] args)
     {
-      _dbContext = dbContext;
+      this._dbContextFactory = dbContextFactory;
+      this._args = args;
     }
     #endregion
   }
