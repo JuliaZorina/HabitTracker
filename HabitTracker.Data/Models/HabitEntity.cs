@@ -1,4 +1,6 @@
-﻿namespace HabitTracker.Data
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace HabitTracker.Data
 {
   /// <summary>
   /// Сущность привычки.
@@ -44,6 +46,7 @@
     /// <summary>
     /// Срок выполнения привычки.
     /// </summary>
+    [Column(TypeName = "timestamp")]
     public DateTime? ExpirationDate {  get; set; }
     /// <summary>
     /// Количество раз выполнения привычки за день.
@@ -52,13 +55,13 @@
     /// <summary>
     /// Приостановлена привычка или нет.
     /// </summary>
-    public bool IsSuspended { get; set; } 
+    public bool IsPaused { get; set; } 
 
     #region Конструкторы
     public HabitEntity() { }
 
     public HabitEntity(Guid id, string name, DateOnly? lastDay, HabitStatus status, long progressDays, DateTime? expirationDate,
-      int numberOfExecutions, bool isSuspeded)
+      int numberOfExecutions, bool isPaused)
     {
       this.Id = id;
       this.Title = name;
@@ -67,7 +70,7 @@
       this.ProgressDays = progressDays;
       this.ExpirationDate = expirationDate;
       this.NumberOfExecutions = numberOfExecutions;
-      this.IsSuspended = isSuspeded;
+      this.IsPaused = isPaused;
     }
 
     public HabitEntity(Guid id, Guid userId, string name, int numberOfExecutions, DateTime? expirationDate, bool isNecessary)
@@ -75,11 +78,11 @@
       this.Id = id;
       this.UserId = userId;
       this.Title = name;
-      this.CreationDate = DateOnly.FromDateTime(DateTime.UtcNow);
+      this.CreationDate = DateOnly.FromDateTime(DateTime.Now);
       this.LastExecutionDate = null;
       this.Status = HabitStatus.Undone;
       this.ProgressDays = 0;
-      this.IsSuspended = false;
+      this.IsPaused = false;
       this.NumberOfExecutions = numberOfExecutions;
       this.ExpirationDate = expirationDate;
       this.IsNecessary = isNecessary;

@@ -1,5 +1,7 @@
 ﻿using HabitTracker.Data;
 using HabitTracker.Data.Repositories;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 
 namespace HabitTracker.Core
 {
@@ -13,7 +15,9 @@ namespace HabitTracker.Core
     /// <summary>
     /// Контекст базы данных.
     /// </summary>
-    private HabitTrackerContext _dbContext;
+     private readonly DbContextFactory _dbContextFactory;
+    private readonly string[] _args;
+
 
     #endregion
 
@@ -26,8 +30,11 @@ namespace HabitTracker.Core
     /// <returns></returns>
     public async Task<UserEntity?> GetById(Guid id)
     {
-      var usersRepository = new UsersRepository(_dbContext);
-      return await usersRepository.GetById(id);  
+      await using (var dbContext = _dbContextFactory.CreateDbContext(this._args))
+      {
+        var usersRepository = new UsersRepository(dbContext);
+        return await usersRepository.GetById(id);
+      }
     }
 
     /// <summary>
@@ -37,8 +44,11 @@ namespace HabitTracker.Core
     /// <returns></returns>
     public async Task<UserEntity?> GetByChatId(long chatId)
     {
-      var usersRepository = new UsersRepository(_dbContext);
-      return await usersRepository.GetByChatId(chatId);  
+      await using(var dbContext = _dbContextFactory.CreateDbContext(this._args))
+      {
+        var usersRepository = new UsersRepository(dbContext);
+        return await usersRepository.GetByChatId(chatId);
+      }       
     }
 
     /// <summary>
@@ -49,25 +59,29 @@ namespace HabitTracker.Core
     /// <exception cref="Exception"></exception>
     public async void Add(string name, long chatId)
     {
-      var usersRepository = new UsersRepository(_dbContext);
-      var getUser = await GetByChatId(chatId);
-      if (getUser == null)
+      await using (var dbContext = _dbContextFactory.CreateDbContext(this._args))
       {
-        var newUser = new UserEntity(Guid.NewGuid(),name, chatId);
-        await usersRepository.Add(newUser);
-      }
-      else
-      {
-        throw new Exception("Пользователь с таким chatId уже существует в системе");
+        var usersRepository = new UsersRepository(dbContext);
+        var getUser = await GetByChatId(chatId);
+        if (getUser == null)
+        {
+          var newUser = new UserEntity(Guid.NewGuid(), name, chatId);
+          await usersRepository.Add(newUser);
+        }
+        else
+        {
+          throw new Exception("Пользователь с таким chatId уже существует в системе");
+        }
       }
     }
 
     #endregion
 
     #region Конструкторы
-    public CommonUserModel(HabitTrackerContext dbContext)
+    public CommonUserModel(DbContextFactory dbContextFactory, string[] args)
     {
-      _dbContext = dbContext;
+      this._dbContextFactory = dbContextFactory;
+      this._args = args;
     }
     #endregion
   }

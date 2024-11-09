@@ -2,6 +2,7 @@
 using HabitTracker.Data.Models;
 using HabitTracker.Data.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 
 namespace HabitTracker.Core
 {
@@ -10,9 +11,13 @@ namespace HabitTracker.Core
     #region Поля и свойства
 
     /// <summary>
-    /// Контекст базы данных
+    /// Фабрика создания контекста базы данных.
     /// </summary>
-    private readonly HabitTrackerContext _dbContext;
+    private readonly DbContextFactory _dbContextFactory;
+    /// <summary>
+    /// Аргументы командной строки.
+    /// </summary>
+    private readonly string[] _args;
 
     #endregion
 
@@ -24,8 +29,11 @@ namespace HabitTracker.Core
     /// <returns></returns>
     public async Task<List<HabitNotificationEntity>?> GetAll()
     {
-      var habitNotificationsRepository = new HabitNotificationRepository(_dbContext);
-      return await habitNotificationsRepository.Get();
+      await using (var dbContext = _dbContextFactory.CreateDbContext(this._args))
+      {
+        var habitNotificationsRepository = new HabitNotificationRepository(dbContext);
+        return await habitNotificationsRepository.Get();
+      }
     }
 
     /// <summary>
@@ -36,16 +44,19 @@ namespace HabitTracker.Core
     /// <returns></returns>
     public async Task<HabitNotificationEntity?> GetById(long chatId, Guid habitId)
     {
-      var habitsNotificationRepository = new HabitNotificationRepository(_dbContext);
-      var usersRepository = new UsersRepository(_dbContext);
-      UserEntity? foundUser = await usersRepository.GetByChatId(chatId);
-      if (foundUser != null)
+      await using (var dbContext = _dbContextFactory.CreateDbContext(this._args))
       {
-        return await habitsNotificationRepository.GetByHabitId(habitId);
-      }
-      else
-      {
-        throw new Exception("Пользователь с таким chatId не найден в базе данных");
+        var habitsNotificationRepository = new HabitNotificationRepository(dbContext);
+        var usersRepository = new UsersRepository(dbContext);
+        UserEntity? foundUser = await usersRepository.GetByChatId(chatId);
+        if (foundUser != null)
+        {
+          return await habitsNotificationRepository.GetByHabitId(habitId);
+        }
+        else
+        {
+          throw new Exception("Пользователь с таким chatId не найден в базе данных");
+        }
       }
     }
 
@@ -59,23 +70,26 @@ namespace HabitTracker.Core
     /// <exception cref="Exception"></exception>
     public async void Add(long chatId, Guid habitId, bool isSending, int countOfNotifications, List<TimeOnly> notificationTime)
     {
-      var habitsNotificationRepository = new HabitNotificationRepository(_dbContext);
-      var notificationRepository = new NotificationRepository(_dbContext);
-      var usersRepository = new UsersRepository(_dbContext);
-      UserEntity? foundUser = await usersRepository.GetByChatId(chatId);
-      if (foundUser != null)
+      await using (var dbContext = _dbContextFactory.CreateDbContext(this._args))
       {
-        NotificationEntity? foundNotification = await notificationRepository.GetByUserId(foundUser.Id);
-        if(foundNotification != null)
+        var habitsNotificationRepository = new HabitNotificationRepository(dbContext);
+        var notificationRepository = new NotificationRepository(dbContext);
+        var usersRepository = new UsersRepository(dbContext);
+        UserEntity? foundUser = await usersRepository.GetByChatId(chatId);
+        if (foundUser != null)
         {
-          var habitNotification = new HabitNotificationEntity(Guid.NewGuid(), habitId, foundNotification.Id, isSending, 
-            countOfNotifications, notificationTime);
-          await habitsNotificationRepository.Add(habitNotification);
-        }        
-      }
-      else
-      {
-        throw new Exception("Пользователь с таким chatId не существует в базе данных");
+          NotificationEntity? foundNotification = await notificationRepository.GetByUserId(foundUser.Id);
+          if (foundNotification != null)
+          {
+            var habitNotification = new HabitNotificationEntity(Guid.NewGuid(), habitId, foundNotification.Id, isSending,
+              countOfNotifications, notificationTime);
+            await habitsNotificationRepository.Add(habitNotification);
+          }
+        }
+        else
+        {
+          throw new Exception("Пользователь с таким chatId не существует в базе данных");
+        }
       }
     }
 
@@ -87,13 +101,16 @@ namespace HabitTracker.Core
     /// <param name="countOfNotifications">Количество уведомлений о привычке.</param>
     public async void Update(Guid habitId, bool isSending, int countOfNotifications)
     {
-      var habitsNotificationRepository = new HabitNotificationRepository(_dbContext);
-      var foundNotification = await habitsNotificationRepository.GetByHabitId(habitId);
-      if (foundNotification != null)
+      await using (var dbContext = _dbContextFactory.CreateDbContext(this._args))
       {
-        foundNotification.IsSending = isSending;
-        foundNotification.CountOfNotifications = countOfNotifications;
-        await habitsNotificationRepository.Update(foundNotification);
+        var habitsNotificationRepository = new HabitNotificationRepository(dbContext);
+        var foundNotification = await habitsNotificationRepository.GetByHabitId(habitId);
+        if (foundNotification != null)
+        {
+          foundNotification.IsSending = isSending;
+          foundNotification.CountOfNotifications = countOfNotifications;
+          await habitsNotificationRepository.Update(foundNotification);
+        }
       }
     }
 
@@ -103,22 +120,27 @@ namespace HabitTracker.Core
     /// <param name="id">Уникальный идентификатор привычки.</param>
     public async void Delete(Guid id)
     {
-      var habitsNotificationRepository = new HabitNotificationRepository(_dbContext);
-      var result = await habitsNotificationRepository.GetById(id);
-      if (result != null)
+      await using (var dbContext = _dbContextFactory.CreateDbContext(this._args))
       {
-        await habitsNotificationRepository.Delete(id);
+        var habitsNotificationRepository = new HabitNotificationRepository(dbContext);
+        var result = await habitsNotificationRepository.GetById(id);
+        if (result != null)
+        {
+          await habitsNotificationRepository.Delete(id);
+        }
       }
     }
-
 
     #endregion
 
     #region Конструкторы
-    public CommonHabitNotificationModel(HabitTrackerContext dbContext)
+
+    public CommonHabitNotificationModel(DbContextFactory dbContextFactory, string[] args)
     {
-      _dbContext = dbContext;
+      this._dbContextFactory = dbContextFactory;
+      this._args = args;
     }
+
     #endregion
   }
 }

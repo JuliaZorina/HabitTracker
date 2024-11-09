@@ -1,4 +1,6 @@
-﻿namespace HabitTracker.Data.Models
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace HabitTracker.Data.Models
 {
   /// <summary>
   /// Сущность привычки, которая выполняется.
@@ -21,6 +23,7 @@
     /// <summary>
     /// Дата и время выполнения привычки.
     /// </summary>
+    [Column(TypeName = "timestamp")]
     public DateTime LastExecutionDate { get; set; }
 
     #region Конструкторы

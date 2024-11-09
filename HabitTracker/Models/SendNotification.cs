@@ -1,6 +1,6 @@
-﻿using System.Net.Sockets;
-using System.Net;
-using HabitTracker.Data;
+﻿using HabitTracker.Data;
+using Microsoft.EntityFrameworkCore.Internal;
+using System.Text;
 using Telegram.Bot;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -19,72 +19,113 @@ namespace HabitTracker.Core
     /// Словарь для хранения уникального идентификатора настроек уведомлений и соответсвующего ему словаря из пары значений 
     /// уникального идентификатора привычки и времени, в которое должно прийти уведомление об этой привычке.
     /// </summary>
-    private static Dictionary<Guid, Dictionary<Guid, TimeOnly>> usersHabitsNotifications = new Dictionary<Guid, Dictionary<Guid, TimeOnly>>();
+    private static Dictionary<Guid, Dictionary<Guid, List<TimeOnly>>> usersHabitsNotifications = new Dictionary<Guid, Dictionary<Guid, List<TimeOnly>>>();
 
     /// <summary>
     /// Отправить пользователю уведомление с напоминанием о выполнении привычки.
     /// </summary>
-    /// <param name="dbContext">Контекст базы данных.</param>
-    /// <param name="botClient">Клиент Telegram-бота.</param>
+    /// <param name="dbContextFactory">Фабрика создания контекста базы данных</param>
+    /// <param name="args">Аргументы командной строки.</param>
+    /// <param name="botClient">Клиент Telegram бота.</param>
     /// <returns>Задача, представляющая асинхронную операцию.</returns>
-    public static async Task SendNotificationToUser(HabitTrackerContext dbContext, ITelegramBotClient botClient)
+    public static async Task SendNotificationToUser(DbContextFactory dbContextFactory, string[] args, ITelegramBotClient botClient)
     {
-      GetData(dbContext);
-      DateTime ntpTime = GetNetworkTime("time.google.com");
-      foreach (var userHabitNotification in usersHabitsNotifications)
+      await using (var dbContext = dbContextFactory.CreateDbContext(args))
       {
-        var notificationsSettingsId = userHabitNotification.Key;
-        Dictionary<Guid, TimeOnly> habitAndTime = userHabitNotification.Value;
-        foreach(var habitData in habitAndTime)
+        userNotificationsSettings.Clear();
+        usersHabitsNotifications.Clear();
+        await GetData(dbContext, dbContextFactory, args);
+        DateTime ntpTime = GetTime.GetNetworkTime("time.google.com");
+        Console.WriteLine($"Start cheking for notifications. Sent time: {ntpTime}");
+        foreach (var userHabitNotification in usersHabitsNotifications)
         {
-          var habitId = habitData.Key;
-          var habitTime = habitData.Value;
-
-          if (TimeOnly.FromDateTime(ntpTime) == habitTime|| TimeOnly.FromDateTime(ntpTime).IsBetween(habitTime, habitTime.AddMinutes(1)))
+          var notificationsSettingsId = userHabitNotification.Key;
+          Dictionary<Guid, List<TimeOnly>> habitAndTime = userHabitNotification.Value;
+          int i = 0;
+          foreach (var habitData in habitAndTime)
           {
-            var habitsModel = new CommonHabitsModel(dbContext);
-            var userModel = new CommonUserModel(dbContext);
-            var notificationsModel = new CommonNotificationModel(dbContext);
-            var foundNotification = await notificationsModel.GetById(notificationsSettingsId);
-            if (foundNotification != null) 
+            var habitId = habitData.Key;
+            var habitTimes = habitData.Value;
+            var currentTime = TimeOnly.FromDateTime(ntpTime);
+
+            foreach (var habitTime in habitTimes)
             {
-              var foundUser = await userModel.GetById(foundNotification.UserId);
-              if (foundUser != null)
+              var time1 = (currentTime == habitTime);
+              var time2 = currentTime.IsBetween(habitTime, habitTime.AddMinutes(1.5));
+              Console.WriteLine($"{i}. {habitId} {currentTime} {habitTime} {habitTime.AddMinutes(1)} {time1} {time2.ToString()}");
+              i++;
+
+              if (currentTime == habitTime || currentTime.IsBetween(habitTime, habitTime.AddMinutes(1)))
               {
-                var foundHabit = await habitsModel.GetById(foundUser.ChatId, habitId);
-                var keyboard = new InlineKeyboardMarkup(new[]
+                var habitsModel = new CommonHabitsModel(dbContextFactory, args);
+                var userModel = new CommonUserModel(dbContextFactory, args);
+                var notificationsModel = new CommonNotificationModel(dbContextFactory, args);
+                var foundNotification = await notificationsModel.GetById(notificationsSettingsId);
+                if (foundNotification != null)
                 {
-                    new[]
+                  var foundUser = await userModel.GetById(foundNotification.UserId);
+                  if (foundUser != null)
+                  {
+                    var messageBuilder = new StringBuilder();
+                    var keyboard = new InlineKeyboardMarkup(new[]
+                        {
+                         new[]
+                         {
+                           InlineKeyboardButton.WithCallbackData("Отметить выполнение", $"/mark_as_done_{habitId}")
+                         },
+                         new[]
+                         {
+                           InlineKeyboardButton.WithCallbackData("Изменить срок выполнения привычки", $"/edit_ex_date_{habitId}")
+                         },
+                         new[]
+                         {
+                           InlineKeyboardButton.WithCallbackData("Скрыть уведомление", "/delete_notification")
+                         }
+                       });
+                    var foundHabit = await habitsModel.GetById(foundUser.ChatId, habitId);
+                    if (foundHabit != null && foundHabit.Status != HabitStatus.Done)
                     {
-                      InlineKeyboardButton.WithCallbackData("Отметить выполнение", $"/mark_as_done_{habitId}")
-                    },
-                    new[]
-                    {
-                      InlineKeyboardButton.WithCallbackData("Скрыть уведомление", "/delete_notification")
+                      
+                      messageBuilder.AppendLine($"Не забудьте выполнить привычку \"{foundHabit.Title}\"");
+                      if (foundHabit.ExpirationDate != null)
+                      {
+                        if (DateOnly.FromDateTime((DateTime)foundHabit.ExpirationDate) == DateOnly.FromDateTime(ntpTime).AddDays(1)
+                          || foundHabit.ExpirationDate < ntpTime)
+                        {
+                          messageBuilder.AppendLine("Сегодня последний день выполнения привычки. Завтра она будет удалена");
+                        }
+                      }                      
                     }
-                });
-                await HabitTracker.TelegramBotHandler.SendMessageAsync(botClient, foundUser.ChatId, 
-                  $"Не забудьте выполнить привычку \"{foundHabit.Title}\"", keyboard);
-                Console.WriteLine($"Notification send to {foundUser.Name} sucesessfully. Habit: {foundHabit.Title}. Time: {habitTime}." +
-                  $"\nSent time: {ntpTime}");
+                    if (messageBuilder.Length > 0)
+                    {
+                      await HabitTracker.TelegramBotHandler.SendMessageAsync(botClient, foundUser.ChatId, messageBuilder.ToString(), keyboard);
+                      Console.WriteLine($"Notification send to {foundUser.Name} sucesessfully. Habit: {foundHabit.Title}. Time: {habitTime}." +
+                   $"\nSent time: {ntpTime}");
+                    }
+                  }
+                }
               }
             }
+
           }
-        }        
+        }
       }
     }
+
 
     /// <summary>
     /// Получить данные о времени отправки уведомлений пользователям.
     /// </summary>
-    /// <param name="dbContext">Контекст базы данных.</param>
-    private static async void GetData(HabitTrackerContext dbContext)
-    {
-      var notificationsModel = new CommonNotificationModel(dbContext);
-      var habitNotificationsModel = new CommonHabitNotificationModel(dbContext);
+    /// <param name="dbContextFactory">Фабрика создания контекста базы данных</param>
+    /// <param name="args">Аргументы командной строки.</param>
+    private static async Task GetData(HabitTrackerContext dbContext, DbContextFactory dbContextFactory, string[] args)
+    {     
+      var notificationsModel = new CommonNotificationModel(dbContextFactory, args);
+      var habitNotificationsModel = new CommonHabitNotificationModel(dbContextFactory, args);
       var allNotifications = await notificationsModel.GetAll();
       if (allNotifications != null)
       {
+        
         foreach (var notification in allNotifications)
         {
           userNotificationsSettings[notification.Id] = notification.UserId;
@@ -93,62 +134,32 @@ namespace HabitTracker.Core
       var allHabitsNotifications = await habitNotificationsModel.GetAll();
       if (allHabitsNotifications != null)
       {
-        foreach (var habitNotification in allHabitsNotifications)
+        for (int i = 0; i < allHabitsNotifications.Count; i++)
         {
-          if (!usersHabitsNotifications.ContainsKey(habitNotification.UserNotificationsId))
+          if (!usersHabitsNotifications.ContainsKey(allHabitsNotifications[i].UserNotificationsId))
           {
-            usersHabitsNotifications[habitNotification.UserNotificationsId] = new Dictionary<Guid, TimeOnly>();
+            usersHabitsNotifications[allHabitsNotifications[i].UserNotificationsId] = new Dictionary<Guid, List<TimeOnly>>();
           }
-          if (habitNotification.NotificationTime.Count > 0)
+
+          if (!usersHabitsNotifications[allHabitsNotifications[i].UserNotificationsId].ContainsKey(allHabitsNotifications[i].HabitId))
           {
-            foreach (var time in habitNotification.NotificationTime)
+            usersHabitsNotifications[allHabitsNotifications[i].UserNotificationsId][allHabitsNotifications[i].HabitId] = new List<TimeOnly>();
+          }
+          if (allHabitsNotifications[i].NotificationTime.Count > 0)
+          {
+            for (int j=0; j<allHabitsNotifications[i].NotificationTime.Count; j++)
             {
-              usersHabitsNotifications[habitNotification.UserNotificationsId][habitNotification.HabitId] = time;
+              var time = allHabitsNotifications[i].NotificationTime[j];
+              
+              if (!usersHabitsNotifications[allHabitsNotifications[i].UserNotificationsId][allHabitsNotifications[i].HabitId].Contains(time))
+              {
+                usersHabitsNotifications[allHabitsNotifications[i].UserNotificationsId][allHabitsNotifications[i].HabitId].Add(time);
+              }
             }
           }
         }
+
       }
-    }
-
-    /// <summary>
-    /// Получить актуальное время для конкретного пользователя.
-    /// </summary>
-    /// <param name="ntpServer"></param>
-    /// <returns></returns>
-    private static DateTime GetNetworkTime(string ntpServer)
-    {
-      const int ntpDataLength = 48;
-      byte[] ntpData = new byte[ntpDataLength];
-      ntpData[0] = 0x1B;
-
-      IPEndPoint ipEndPoint = new IPEndPoint(Dns.GetHostAddresses(ntpServer)[0], 123);
-      using (Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp))
-      {
-        socket.Connect(ipEndPoint);
-        socket.Send(ntpData);
-        socket.Receive(ntpData);
-        socket.Close();
-      }
-
-      ulong intPart = BitConverter.ToUInt32(ntpData, 40);
-      ulong fractPart = BitConverter.ToUInt32(ntpData, 44);
-
-      intPart = SwapEndianness(intPart);
-      fractPart = SwapEndianness(fractPart);
-
-      ulong milliseconds = (intPart * 1000) + ((fractPart * 1000) / 0x100000000L);
-      DateTime networkDateTime = new DateTime(1900, 1, 1).AddMilliseconds((long)milliseconds);
-
-      return networkDateTime.ToLocalTime();
-    }
-
-    private static uint SwapEndianness(ulong x)
-    {
-      return (uint)(((x & 0x000000FF) << 24) +
-                    ((x & 0x0000FF00) << 8) +
-                    ((x & 0x00FF0000) >> 8) +
-                    ((x & 0xFF000000) >> 24));
     }
   }
-
 }
