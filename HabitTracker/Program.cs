@@ -13,8 +13,8 @@ namespace HabitTracker
     /// <summary>
     /// Точка входа в приложение.
     /// </summary>
-    /// <param name="args"></param>
-    /// <returns></returns>
+    /// <param name="args">Аргументы командной строки.</param>
+    /// <returns>Задача, представляющая асинхронную операцию.</returns>
     static async Task Main(string[] args)
     {
       Console.WriteLine("Отладка: Программа запущена");
@@ -43,7 +43,6 @@ namespace HabitTracker
       Console.WriteLine("Отладка: Программа завершена");
       Console.WriteLine("Нажмите любую клавишу...");
       Console.ReadKey();
-
     }
   }
 }

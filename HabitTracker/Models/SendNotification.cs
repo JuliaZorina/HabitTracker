@@ -23,8 +23,9 @@ namespace HabitTracker.Core
     /// <summary>
     /// Отправить пользователю уведомление с напоминанием о выполнении привычки.
     /// </summary>
-    /// <param name="dbContext">Контекст базы данных.</param>
-    /// <param name="botClient">Клиент Telegram-бота.</param>
+    /// <param name="dbContextFactory">Фабрика создания контекста базы данных</param>
+    /// <param name="args">Аргументы командной строки.</param>
+    /// <param name="botClient">Клиент Telegram бота.</param>
     /// <returns>Задача, представляющая асинхронную операцию.</returns>
     public static async Task SendNotificationToUser(DbContextFactory dbContextFactory, string[] args, ITelegramBotClient botClient)
     {
@@ -83,7 +84,8 @@ namespace HabitTracker.Core
     /// <summary>
     /// Получить данные о времени отправки уведомлений пользователям.
     /// </summary>
-    /// <param name="dbContext">Контекст базы данных.</param>
+    /// <param name="dbContextFactory">Фабрика создания контекста базы данных</param>
+    /// <param name="args">Аргументы командной строки.</param>
     private static async void GetData(HabitTrackerContext dbContext, DbContextFactory dbContextFactory, string[] args)
     {
       var notificationsModel = new CommonNotificationModel(dbContextFactory, args);

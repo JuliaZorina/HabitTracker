@@ -84,6 +84,9 @@ namespace HabitTracker.Core
 
       chart.ToImage(fileName, imageOrPrintOptions);
     }
+
+
+
     #endregion
 
   }

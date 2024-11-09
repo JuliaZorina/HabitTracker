@@ -13,11 +13,13 @@ namespace HabitTracker.Core
     #region Поля и свойства
 
     /// <summary>
-    /// Контекст базы данных.
+    /// Фабрика создания контекста базы данных.
     /// </summary>
     private readonly DbContextFactory _dbContextFactory;
+    /// <summary>
+    /// Аргументы командной строки.
+    /// </summary>
     private readonly string[] _args;
-
 
     #endregion
 
@@ -111,8 +113,7 @@ namespace HabitTracker.Core
     /// Получить список всех приостановленных привычек пользователя.
     /// </summary>
     /// <param name="chatId">Уникальный идентификатор чата пользователя.</param>
-    /// <param name="isNecessary">Обязательность привычки.</param>
-    /// <returns></returns>
+    /// <returns>Коллекция экземпляров класса HabitEntity.</returns>
     public async Task<List<HabitEntity>?> GetSuspendedHabit(long chatId)
     {
       await using (var dbContext = _dbContextFactory.CreateDbContext(this._args))
@@ -135,7 +136,7 @@ namespace HabitTracker.Core
     /// Получить список всех активных привычек пользователя в зависимости от обязательности привычки.
     /// </summary>
     /// <param name="chatId">Уникальный идентификатор чата пользователя.</param>
-    /// <returns></returns>
+    /// <returns>Коллекция экземпляров класса HabitEntity.</returns>
     public async Task<List<HabitEntity>?> GetNecessaryHabit(long chatId, bool isNecessary)
     {
       await using (var dbContext = _dbContextFactory.CreateDbContext(this._args))
@@ -153,11 +154,16 @@ namespace HabitTracker.Core
         }
       }
     }
+
     /// <summary>
     /// Добавить новую привычку в базу данных.
     /// </summary>
     /// <param name="chatId">Уникальный идентификатор чата пользователя.</param>
     /// <param name="title">Название привычки.</param>
+    /// <param name="numberOfExecutions">Количество повторений привычки в день.</param>
+    /// <param name="days">Срок выполнения привычки в днях.</param>
+    /// <param name="isNecessary">Обязательность выполнения привычки.</param>
+    /// <exception cref="Exception">Выбрасывает исключение, если пользователь не найден.</exception>
     public async void Add(long chatId, string title, int numberOfExecutions, DateTime? days, bool isNecessary)
     {
       await using (var dbContext = _dbContextFactory.CreateDbContext(this._args))
@@ -208,9 +214,12 @@ namespace HabitTracker.Core
     /// </summary>
     /// <param name="id">Уникальный идентификатор привычки.</param>
     /// <param name="name">Название привычки.</param>
-    /// <param name="lastDay">Дата последнего выполнения привычки.</param>
+    /// <param name="lastDay">День последнего выполения привычки пользователем.</param>
     /// <param name="status">Статус привычки.</param>
-    /// <param name="progressDays">Количество дней прогресса привычки.</param>
+    /// <param name="progressDays">Количество дней прогресса.</param>
+    /// <param name="expirationDate">Дата истечения срока выполнения привычки.</param>
+    /// <param name="numberOfExecutions">Количество повторений привычки в день.</param>
+    /// <param name="isSuspended">Активна привычка на данный момент или нет. Нужно для расслыки уведомлений.</param>
     public async void Update(Guid id, string name, DateOnly? lastDay, HabitStatus status, long progressDays, 
       DateTime? expirationDate, int numberOfExecutions, bool isSuspended)
     {
