@@ -410,7 +410,7 @@ namespace HabitTracker
     {
       var habitId = callbackData.Remove(0, callbackData.LastIndexOf('_') + 1);
       var habit = await GetHabitById(chatId, Guid.Parse(habitId));
-      if (habit.IsSuspended == false)
+      if (habit.IsPaused == false)
       {
         var keyboard = new InlineKeyboardMarkup(new[]
       {
@@ -673,17 +673,9 @@ namespace HabitTracker
     /// <param name="messageId"></param>
     /// <param name="chatId"></param>
     /// <param name="habitId"></param>
-    /// <returns></returns>
+    /// <returns>Задача, представляющая асинхронную операцию.</returns>
     private async Task GetHabitWeekStatisticsAsync(ITelegramBotClient botClient, int messageId, long chatId, string habitId)
     {
-      //получить текущую дату
-      //получить текущая дата - 7
-      //в таблице PracticedHabits найти данные в этом промежутке по заданной привычке
-      //в цикле проверить сколько раз за день была отмечена привычка
-      //дд.мм.гг (возможно день недели указывать, если получится) - выполнено (или если done, то смайлик галочки зеленой)
-      //дд.мм.гг(возможно день недели указывать, если получится) - не выполнено(или если undone, то смайлик красного крестика)
-      //дд.мм.гг(возможно день недели указывать, если получится) - выполнено не до конца(если inprogress, то смайлик чего - нибудь еще)
-      //отправить пользователю сформированное сообщение
       var habitsModel = new CommonHabitsModel(_dbContextFactory, _args);
       var habit = await habitsModel.GetById(chatId, Guid.Parse(habitId));
       var messageBuilder = new StringBuilder();
@@ -771,9 +763,13 @@ namespace HabitTracker
           {
             status = HabitStatus.InProgress;
           }
+          else if (countPractice > habit.NumberOfExecutions)
+          {
+            status = HabitStatus.Done;
+          }
 
           habitsModel.Update(habit.Id, habit.Title, lastDay, status, progressDays, habit.ExpirationDate,
-                            habit.NumberOfExecutions, habit.IsSuspended);
+                            habit.NumberOfExecutions, habit.IsPaused);
 
           var keyboard = new InlineKeyboardMarkup(new[]
           {
@@ -1107,7 +1103,7 @@ namespace HabitTracker
       if (state.Contains("awaiting_habit_rename_"))
       {
         habitsModel.Update(habit.Id, message, habit.LastExecutionDate, habit.Status, habit.ProgressDays,
-          habit.ExpirationDate, habit.NumberOfExecutions, habit.IsSuspended);
+          habit.ExpirationDate, habit.NumberOfExecutions, habit.IsPaused);
       }
       else if (state.Contains("awaiting_newex_date_"))
       {
@@ -1122,7 +1118,7 @@ namespace HabitTracker
           habit.ExpirationDate = null;
         }
         habitsModel.Update(habit.Id, habit.Title, habit.LastExecutionDate, habit.Status, habit.ProgressDays,
-            habit.ExpirationDate, habit.NumberOfExecutions, habit.IsSuspended);
+            habit.ExpirationDate, habit.NumberOfExecutions, habit.IsPaused);
       }
       else if (state.Contains("awaiting_habit_newfreq_"))
       {
@@ -1130,7 +1126,7 @@ namespace HabitTracker
         {
           habit.NumberOfExecutions = value;
           habitsModel.Update(habit.Id, habit.Title, habit.LastExecutionDate, habit.Status, habit.ProgressDays,
-            habit.ExpirationDate, habit.NumberOfExecutions, habit.IsSuspended);
+            habit.ExpirationDate, habit.NumberOfExecutions, habit.IsPaused);
         }
       }
     }

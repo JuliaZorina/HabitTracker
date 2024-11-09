@@ -64,7 +64,7 @@ namespace HabitTracker.Data.Repositories
       }
       if (isSuspended)
       {
-        query = query.Where(h => h.IsSuspended == isSuspended);
+        query = query.Where(h => h.IsPaused == isSuspended);
       }
       if (isNecessary)
       {
@@ -104,7 +104,7 @@ namespace HabitTracker.Data.Repositories
      
       query = query
         .Where(h => h.UserId == userId)
-        .Where(h => h.IsSuspended == false);
+        .Where(h => h.IsPaused == false);
 
       return await query.ToListAsync();
     }
@@ -119,7 +119,7 @@ namespace HabitTracker.Data.Repositories
       var query = _dbContext.Habits.AsNoTracking();
 
       query = query
-        .Where(h => h.IsSuspended == isSuspended)
+        .Where(h => h.IsPaused == isSuspended)
         .Where(h => h.UserId == userId);
 
       return await query.ToListAsync();
@@ -137,7 +137,7 @@ namespace HabitTracker.Data.Repositories
 
       query = query
         .Where(h => h.UserId == userId)
-        .Where(h => h.IsSuspended == isSuspended)
+        .Where(h => h.IsPaused == isSuspended)
         .Where(h => h.IsNecessary == isNecessary);
 
       return await query.ToListAsync();
@@ -176,7 +176,7 @@ namespace HabitTracker.Data.Repositories
           .SetProperty(h => h.LastExecutionDate, habit.LastExecutionDate)
           .SetProperty(h => h.Status, habit.Status)
           .SetProperty(h => h.ProgressDays, habit.ProgressDays)
-          .SetProperty(h => h.IsSuspended, habit.IsSuspended)
+          .SetProperty(h => h.IsPaused, habit.IsPaused)
           .SetProperty(h => h.NumberOfExecutions, habit.NumberOfExecutions)
           .SetProperty(h => h.ExpirationDate, habit.ExpirationDate));
     }

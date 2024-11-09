@@ -1,5 +1,6 @@
 ﻿using HabitTracker.Data;
 using Microsoft.EntityFrameworkCore.Internal;
+using System.Text;
 using Telegram.Bot;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -43,7 +44,8 @@ namespace HabitTracker.Core
             var habitTime = habitData.Value;
             var currentTime = TimeOnly.FromDateTime(ntpTime);
 
-            if (currentTime == habitTime || currentTime.IsBetween(habitTime, habitTime.AddMinutes(1)))
+            if (currentTime == habitTime || currentTime.IsBetween(habitTime, habitTime.AddMinutes(2))
+              || currentTime.IsBetween(habitTime.AddMinutes(-1), habitTime))
             {
               var habitsModel = new CommonHabitsModel(dbContextFactory, args);
               var userModel = new CommonUserModel(dbContextFactory, args);
@@ -57,29 +59,40 @@ namespace HabitTracker.Core
                   var foundHabit = await habitsModel.GetById(foundUser.ChatId, habitId);
                   if (foundHabit != null && foundHabit.Status != HabitStatus.Done)
                   {
+                    var messageBuilder = new StringBuilder();
+                    messageBuilder.AppendLine($"Не забудьте выполнить привычку \"{foundHabit.Title}\"");
+                    if(foundHabit.ExpirationDate != null)
+                    {
+                      if (DateOnly.FromDateTime((DateTime)foundHabit.ExpirationDate) == DateOnly.FromDateTime(ntpTime).AddDays(1)
+                        || foundHabit.ExpirationDate < ntpTime)
+                      {
+                        messageBuilder.AppendLine("Сегодня последний день выполнения привычки. Завтра она будет удалена");
+                      }
+                    }                    
                     var keyboard = new InlineKeyboardMarkup(new[]
-                  {
-                    new[]
-                    {
-                      InlineKeyboardButton.WithCallbackData("Отметить выполнение", $"/mark_as_done_{habitId}")
-                    },
-                    new[]
-                    {
-                      InlineKeyboardButton.WithCallbackData("Скрыть уведомление", "/delete_notification")
-                    }
-                });
-                    await HabitTracker.TelegramBotHandler.SendMessageAsync(botClient, foundUser.ChatId,
-                      $"Не забудьте выполнить привычку \"{foundHabit.Title}\"", keyboard);
+ {
+                       new[]
+                       {
+                         InlineKeyboardButton.WithCallbackData("Отметить выполнение", $"/mark_as_done_{habitId}")
+                       },
+                       new[]
+                       {
+                         InlineKeyboardButton.WithCallbackData("Скрыть уведомление", "/delete_notification")
+                       }
+                     });
+                    await HabitTracker.TelegramBotHandler.SendMessageAsync(botClient, foundUser.ChatId, messageBuilder.ToString(), keyboard);
+
                     Console.WriteLine($"Notification send to {foundUser.Name} sucesessfully. Habit: {foundHabit.Title}. Time: {habitTime}." +
                       $"\nSent time: {ntpTime}");
-                  }                  
+                  }
                 }
               }
             }
           }
-        }            
+        }
       }
     }
+
 
     /// <summary>
     /// Получить данные о времени отправки уведомлений пользователям.
@@ -116,6 +129,6 @@ namespace HabitTracker.Core
           }
         }
       }
-    }    
+    }
   }
 }

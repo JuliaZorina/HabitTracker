@@ -55,13 +55,13 @@ namespace HabitTracker.Data
     /// <summary>
     /// Приостановлена привычка или нет.
     /// </summary>
-    public bool IsSuspended { get; set; } 
+    public bool IsPaused { get; set; } 
 
     #region Конструкторы
     public HabitEntity() { }
 
     public HabitEntity(Guid id, string name, DateOnly? lastDay, HabitStatus status, long progressDays, DateTime? expirationDate,
-      int numberOfExecutions, bool isSuspeded)
+      int numberOfExecutions, bool isPaused)
     {
       this.Id = id;
       this.Title = name;
@@ -70,7 +70,7 @@ namespace HabitTracker.Data
       this.ProgressDays = progressDays;
       this.ExpirationDate = expirationDate;
       this.NumberOfExecutions = numberOfExecutions;
-      this.IsSuspended = isSuspeded;
+      this.IsPaused = isPaused;
     }
 
     public HabitEntity(Guid id, Guid userId, string name, int numberOfExecutions, DateTime? expirationDate, bool isNecessary)
@@ -82,7 +82,7 @@ namespace HabitTracker.Data
       this.LastExecutionDate = null;
       this.Status = HabitStatus.Undone;
       this.ProgressDays = 0;
-      this.IsSuspended = false;
+      this.IsPaused = false;
       this.NumberOfExecutions = numberOfExecutions;
       this.ExpirationDate = expirationDate;
       this.IsNecessary = isNecessary;

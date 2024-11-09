@@ -1,4 +1,5 @@
 ﻿using HabitTracker.Data;
+using Telegram.Bot;
 
 namespace HabitTracker.Core
 {
@@ -20,20 +21,29 @@ namespace HabitTracker.Core
         foreach (var habit in foundHabits)
         {
           var ntpTime = GetTime.GetNetworkTime("time.google.com");
+          //var ntpTime = DateTime.Now.AddDays(1);
           if ((TimeOnly.FromDateTime(ntpTime) == TimeOnly.MinValue
-            || TimeOnly.FromDateTime(ntpTime).IsBetween(TimeOnly.MinValue, TimeOnly.MinValue.AddMinutes(1)))
+            || TimeOnly.FromDateTime(ntpTime).IsBetween(TimeOnly.MinValue, TimeOnly.MinValue.AddMinutes(1.5)))
             || DateOnly.FromDateTime(ntpTime) > habit.LastExecutionDate)
           {
             if (habit.Status == HabitStatus.Done || habit.Status == HabitStatus.InProgress)
             {
               habit.Status = HabitStatus.Undone;
               habitsModel.Update(habit.Id, habit.Title, habit.LastExecutionDate, habit.Status, habit.ProgressDays, habit.ExpirationDate,
-                habit.NumberOfExecutions, habit.IsSuspended);
+                habit.NumberOfExecutions, habit.IsPaused);
             }
           }
+          if (habit.ExpirationDate != null)
+          {
+            if (habit.ExpirationDate == ntpTime || DateOnly.FromDateTime((DateTime)habit.ExpirationDate) < DateOnly.FromDateTime(ntpTime)
+              || habit.ExpirationDate < ntpTime)
+            {
+              habitsModel.Delete(habit.Id);
+            }            
+          }
         }
-      }
 
-    }
+      }
+    } 
   }
 }
