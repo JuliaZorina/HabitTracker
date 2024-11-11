@@ -1,5 +1,4 @@
-﻿
-namespace HabitTracker.Models
+﻿namespace HabitTracker.Models
 {
   /// <summary>
   /// Отслеживание статуса пользователя при добавлении новой привычки.

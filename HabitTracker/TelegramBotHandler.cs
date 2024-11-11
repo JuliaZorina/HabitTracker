@@ -25,9 +25,13 @@ namespace HabitTracker
     /// </summary>
     private readonly ITelegramBotClient _botClient;
 
-    //private HabitTrackerContext _dbContext;
-
+    /// <summary>
+    /// Фабрика создания контекста базы данных.
+    /// </summary>
     private readonly DbContextFactory _dbContextFactory;
+    /// <summary>
+    /// Аргументы командной строки.
+    /// </summary>
     private readonly string[] _args;
 
     #endregion

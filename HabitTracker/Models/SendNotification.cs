@@ -50,11 +50,6 @@ namespace HabitTracker.Core
 
             foreach (var habitTime in habitTimes)
             {
-              var time1 = (currentTime == habitTime);
-              var time2 = currentTime.IsBetween(habitTime, habitTime.AddMinutes(1.5));
-              Console.WriteLine($"{i}. {habitId} {currentTime} {habitTime} {habitTime.AddMinutes(1)} {time1} {time2.ToString()}");
-              i++;
-
               if (currentTime == habitTime || currentTime.IsBetween(habitTime, habitTime.AddMinutes(1)))
               {
                 var habitsModel = new CommonHabitsModel(dbContextFactory, args);
@@ -106,7 +101,6 @@ namespace HabitTracker.Core
                 }
               }
             }
-
           }
         }
       }
@@ -158,7 +152,6 @@ namespace HabitTracker.Core
             }
           }
         }
-
       }
     }
   }

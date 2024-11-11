@@ -737,7 +737,6 @@ namespace HabitTracker
       if (habit != null)
       {
         var ntwTime = GetTime.GetNetworkTime("time.google.com");
-        //var ntwTime = DateTime.Now.AddDays(1);
         practicedHabitsModel.Add(habit.Id, ntwTime);
         Thread.Sleep(1000);
         HabitStatus status = habit.Status;

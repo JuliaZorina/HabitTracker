@@ -10,9 +10,12 @@ namespace HabitTracker.Core
     #region Поля и свойства
 
     /// <summary>
-    /// Контекст базы данных
+    /// Фабрика создания контекста базы данных.
     /// </summary>
     private readonly DbContextFactory _dbContextFactory;
+    /// <summary>
+    /// Аргументы командной строки.
+    /// </summary>
     private readonly string[] _args;
 
 
