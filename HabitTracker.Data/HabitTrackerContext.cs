@@ -54,21 +54,25 @@ namespace HabitTracker.Data
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
       optionsBuilder.UseNpgsql(BotConfigManager.ConfigApp.DatabaseConnectionString);
-      /*try
+      optionsBuilder.LogTo(Console.WriteLine, Microsoft.Extensions.Logging.LogLevel.Warning);
+      optionsBuilder.LogTo(Console.WriteLine, Microsoft.Extensions.Logging.LogLevel.Error);
+      optionsBuilder.LogTo(Console.WriteLine, Microsoft.Extensions.Logging.LogLevel.Critical);
+      try
       {
         if (_logStream == null)
         {
-          var fileStream = new FileStream($"mylog_{DateTime.Now:yyyyMMdd_HHmmss}.txt", FileMode.Append, FileAccess.Write, FileShare.Read);
+          var fileStream = new FileStream($"logs\\database_log.txt", FileMode.Append, FileAccess.Write, FileShare.Write);
           _logStream = new StreamWriter(fileStream) { AutoFlush = true };
         }
         // Логируем команды базы данных
+        optionsBuilder.LogTo(Console.WriteLine, new[] { DbLoggerCategory.Database.Connection.Name });
         optionsBuilder.LogTo(_logStream.WriteLine, new[] { DbLoggerCategory.Database.Command.Name });
       }
       catch (Exception ex)
       {
         Console.WriteLine($"Ошибка записи в лог: {ex.Message}");
-      }*/
-      
+      }
+
     }
 
     /// <summary>
@@ -79,8 +83,8 @@ namespace HabitTracker.Data
     {
       if (_logStream != null)
       {
-        await _logStream.DisposeAsync(); // Асинхронное освобождение ресурсов StreamWriter
-        _logStream = null; // Обнуляем ссылку
+        await _logStream.DisposeAsync(); 
+        _logStream = null; 
       }
       await base.DisposeAsync();
     }
