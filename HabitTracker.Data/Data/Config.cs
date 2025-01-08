@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using YamlDotNet.Serialization;
+﻿using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
 namespace HabitTracker.Data.Data
 {
+  /// <summary>
+  /// Класс для работы с файлом конфигурации приложения.
+  /// </summary>
   public class Config
   {
     /// <summary>
@@ -20,10 +18,6 @@ namespace HabitTracker.Data.Data
     /// </summary>
     public string BotToken { get; set; }
 
-    /// <summary>
-    /// Получает или устанавливает идентификатор администратора бота.
-    /// </summary>
-    public long AdminId { get; set; }
 
     /// <summary>
     /// Загружает конфигурацию из указанного YAML файла.
@@ -32,12 +26,20 @@ namespace HabitTracker.Data.Data
     /// <returns>Экземпляр класса Config с загруженными настройками.</returns>
     public static Config LoadFromFile(string path)
     {
-      var deserializer = new DeserializerBuilder()
+      try
+      {
+        var deserializer = new DeserializerBuilder()
           .WithNamingConvention(CamelCaseNamingConvention.Instance)
           .Build();
 
-      using var reader = new StreamReader(path);
-      return deserializer.Deserialize<Config>(reader);
+        using var reader = new StreamReader(path);
+        return deserializer.Deserialize<Config>(reader);
+      }
+      catch(Exception ex)
+      {
+        Console.WriteLine($"Error loading config: {ex.Message}");
+        throw;
+      }
     }
   }
 }
